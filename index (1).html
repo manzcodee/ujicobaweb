@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="google-site-verification" content="GvyTGbIx3Zov0CXr0f1voJ2LJnac-ppCl62NStzdY3E" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ManzChat - Live Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            .pb-safe { padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
+            .pt-safe { padding-top: max(0.75rem, env(safe-area-inset-top)); }
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes fall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        .animate-slide-up { animation: slideUp 0.4s ease-out forwards; }
+        .animate-pop { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .animate-fall { animation: fall linear forwards; }
+        .chat-bubble-me { border-bottom-right-radius: 4px; }
+        .chat-bubble-other { border-bottom-left-radius: 4px; }
+    </style>
+</head>
+<body class="flex items-center justify-center fixed inset-0 bg-gray-100 text-gray-800 font-sans overflow-hidden w-full h-full">
+    
+    <!-- Notification Bar -->
+    <div id="notification-bar" class="fixed top-4 md:top-6 left-1/2 transform -translate-x-1/2 bg-white border-l-4 border-indigo-600 text-gray-800 px-4 py-3 rounded-xl shadow-2xl z-[100] flex items-center gap-3 transition-transform duration-300 translate-y-[-150%] cursor-pointer min-w-[300px] max-w-[90%]">
+        <img id="notif-avatar" src="" class="w-10 h-10 rounded-full object-cover shadow-sm border border-gray-100">
+        <div class="flex flex-col overflow-hidden flex-1">
+            <span id="notif-title" class="font-bold text-sm truncate text-gray-800"></span>
+            <span id="notif-desc" class="text-xs text-gray-500 truncate mt-0.5"></span>
+        </div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-300">
+        <div class="flex flex-col items-center animate-slide-up">
+            <div class="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent mb-4 shadow-lg"></div>
+            <p class="text-indigo-600 font-bold tracking-wide">Loading ManzChat...</p>
+        </div>
+    </div>
+
+    <!-- Container -->
+    <div class="w-full h-full bg-white overflow-hidden flex border-none relative animate-fade-in">
+        
+        <!-- Join Screen -->
+        <div id="join-screen" class="hidden flex-col items-center justify-center w-full h-full p-6 sm:p-8 text-center bg-white absolute inset-0 z-40">
+            <div class="w-24 h-24 sm:w-28 sm:h-28 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mb-6 shadow-xl animate-slide-up">
+                <svg class="w-12 h-12 sm:w-14 sm:h-14 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+            </div>
+            <h2 class="text-4xl sm:text-5xl font-extrabold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 animate-slide-up" style="animation-delay: 0.1s">ManzChat</h2>
+            <p class="text-gray-500 mb-10 text-base sm:text-lg max-w-sm mx-auto animate-slide-up" style="animation-delay: 0.2s">Connect with friends and play games.</p>
+            
+            <div class="w-full max-w-sm space-y-4 text-left animate-slide-up" style="animation-delay: 0.3s">
+                <button id="google-login-btn" class="w-full bg-white border-2 border-gray-200 hover:border-indigo-100 hover:bg-indigo-50 active:scale-95 text-gray-700 font-bold py-3.5 px-4 rounded-2xl transition-all duration-200 shadow-sm flex items-center justify-center gap-3">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Continue with Google
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Dashboard & Chat Screen -->
+        <div id="main-screen" class="hidden w-full h-full flex-col md:flex-row relative bg-white">
+            
+            <!-- Sidebar -->
+            <div id="sidebar" class="w-full md:w-[320px] lg:w-[380px] bg-gray-50/80 backdrop-blur-md md:border-r border-gray-200 flex flex-col h-full absolute md:relative z-20 transition-transform duration-300 shadow-lg md:shadow-none">
+                <!-- Branding -->
+                <div class="p-5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white flex justify-between items-center shadow-md z-10 pt-safe shrink-0">
+                    <h1 class="text-2xl font-extrabold tracking-tight flex items-center gap-2">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                        ManzChat
+                    </h1>
+                    <button id="leave-btn" class="bg-white/20 hover:bg-white/30 rounded-full transition p-2 backdrop-blur-sm" title="Sign Out">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    </button>
+                </div>
+
+                <!-- User Profile -->
+                <div class="p-4 bg-white border-b border-gray-100 flex items-center justify-between shadow-sm relative z-10 shrink-0">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <div class="relative">
+                            <img id="my-avatar" src="" class="w-12 h-12 rounded-full object-cover border-2 border-indigo-100 shadow-sm flex-shrink-0">
+                            <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                        </div>
+                        <div class="flex flex-col truncate">
+                            <span id="my-username" class="font-bold text-gray-800 truncate text-base"></span>
+                            <span id="my-status" class="text-xs text-green-500 font-semibold">Online</span>
+                            <span id="my-points" class="text-xs text-indigo-600 font-bold">Poin: 0</span>
+                        </div>
+                    </div>
+                    <button id="open-edit-modal-btn" class="text-gray-400 hover:text-indigo-600 transition p-2.5 bg-gray-50 hover:bg-indigo-50 rounded-full flex-shrink-0 border border-gray-100 shadow-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
+                    </button>
+                </div>
+
+                <!-- Tabs -->
+                <div class="flex bg-white border-b border-gray-200 shadow-sm relative z-10 shrink-0">
+                    <button id="tab-private" class="flex-1 py-3.5 text-sm font-bold text-indigo-600 border-b-[3px] border-indigo-600 transition flex items-center justify-center gap-1.5">
+                        Private
+                    </button>
+                    <button id="tab-public" class="flex-1 py-3.5 text-sm font-bold text-gray-500 border-b-[3px] border-transparent hover:text-indigo-500 hover:bg-gray-50 transition flex items-center justify-center gap-1.5">
+                        Public
+                    </button>
+                    <button id="tab-game" class="flex-1 py-3.5 text-sm font-bold text-gray-500 border-b-[3px] border-transparent hover:text-indigo-500 hover:bg-gray-50 transition flex items-center justify-center gap-1.5">
+                        Game
+                    </button>
+                </div>
+
+                <!-- Tab Content: Private Chats -->
+                <div id="panel-private" class="flex-1 flex flex-col min-h-0 overflow-hidden bg-white">
+                    <div class="p-3 border-b border-gray-100 bg-gray-50/50 shrink-0">
+                        <div class="flex gap-2 relative">
+                            <input id="friend-username-input" type="text" placeholder="Add friend by username..." class="flex-1 pl-3 pr-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm transition">
+                            <button id="add-friend-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition shadow-sm active:scale-95">Add</button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 min-h-0 overflow-y-auto p-2 pb-safe md:pb-2">
+                        <div id="friends-list" class="space-y-1"></div>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Public Zone -->
+                <div id="panel-public" class="hidden flex-1 flex-col min-h-0 overflow-y-auto bg-white p-4 items-center justify-center space-y-3">
+                    <h3 class="text-xl font-bold text-gray-800">Public Zone</h3>
+                    <button id="btn-global-chat" class="w-full max-w-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-sm">Chat Bebas (Global)</button>
+                    
+                    <div class="w-full max-w-xs mt-2 pt-4 border-t border-gray-100 flex flex-col items-center space-y-3">
+                        <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider">Chat Acak</h4>
+                        <select id="random-chat-pref" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 font-bold text-gray-700">
+                            <option value="Bebas">Bebas</option>
+                            <option value="Cowok">Cari Cowok</option>
+                            <option value="Cewek">Cari Cewek</option>
+                        </select>
+                        <button id="btn-random-chat" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-sm">Mulai Chat Acak</button>
+                        <p id="random-chat-status" class="text-sm text-purple-500 font-semibold h-4"></p>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Game -->
+                <div id="panel-game" class="hidden flex-1 flex-col min-h-0 overflow-y-auto bg-white p-4 items-center justify-center space-y-3">
+                    <h3 class="text-xl font-bold text-gray-800">Games</h3>
+                    
+                    <div class="w-full max-w-xs space-y-2">
+                        <h4 class="text-sm font-bold text-gray-500 uppercase">Tic Tac Toe</h4>
+                        <button id="play-bot-btn" class="w-full bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 font-bold py-2 px-4 rounded-xl transition shadow-sm">Play vs Bot</button>
+                        <button id="find-match-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-xl transition shadow-sm">Find Online Match</button>
+                    </div>
+
+                    <div class="w-full max-w-xs space-y-2 mt-4 pt-4 border-t border-gray-100">
+                        <h4 class="text-sm font-bold text-gray-500 uppercase">Tebak Kata</h4>
+                        <button id="play-tebak-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-xl transition shadow-sm">Mulai Tebak Kata</button>
+                        <p id="tebak-status" class="text-sm text-green-500 font-semibold h-4"></p>
+                    </div>
+                </div>
+
+            </div>
+            
+            <!-- Chat / Game Area -->
+            <div id="main-content-area" class="hidden md:flex flex-1 flex-col h-full overflow-hidden absolute md:relative inset-0 md:inset-auto z-30 md:z-10 animate-fade-in w-full bg-gray-50">
+                
+                <!-- Chat Header -->
+                <div id="chat-header" class="bg-white px-4 py-3 md:px-6 md:py-4 flex items-center justify-between shadow-sm border-b border-gray-200 z-20 hidden pt-safe shrink-0">
+                    <div class="flex items-center gap-3 md:gap-4">
+                        <button id="back-to-sidebar-btn" class="md:hidden p-2 -ml-2 text-gray-500 hover:text-indigo-600 transition rounded-full hover:bg-gray-100 active:bg-gray-200">
+                            Back
+                        </button>
+                        <div id="chat-user-profile" class="flex items-center gap-3 cursor-pointer p-1.5 -ml-1.5 rounded-xl hover:bg-gray-100 transition">
+                            <img id="chat-avatar" src="" class="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover shadow-sm border border-gray-100">
+                            <div class="flex flex-col">
+                                <h2 id="chat-display-name" class="font-bold text-gray-800 text-base md:text-lg leading-tight"></h2>
+                                <p id="chat-status" class="text-xs text-gray-500 font-medium mt-0.5"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messages Area -->
+                <div id="messages" class="flex-1 min-h-0 overflow-y-auto p-4 md:p-6 space-y-5 bg-[#E5DDD5] hidden relative z-10"></div>
+                
+                <!-- Input Area -->
+                <div id="input-area" class="bg-white p-3 md:p-4 border-t border-gray-200 flex items-center gap-2 md:gap-3 pb-safe z-20 hidden shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] shrink-0 w-full">
+                    <input id="message-input" type="text" class="w-full pl-4 pr-4 py-3 bg-gray-100 border border-transparent rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-gray-800 text-sm md:text-base transition shadow-sm" placeholder="Type a message...">
+                    <button id="send-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full w-12 h-12 flex items-center justify-center transition duration-200 shadow-md flex-shrink-0 active:scale-95 group">
+                        Send
+                    </button>
+                </div>
+
+                <!-- Game Area -->
+                <div id="game-area" class="hidden flex-1 flex-col h-full bg-white z-20 absolute inset-0 w-full">
+                    <div class="bg-white px-4 py-3 md:px-6 md:py-4 flex items-center justify-between shadow-sm border-b border-gray-200 shrink-0 pt-safe">
+                       <div class="flex items-center gap-3">
+                           <button id="back-from-game-btn" class="md:hidden p-2 -ml-2 text-gray-500 hover:text-indigo-600 transition rounded-full hover:bg-gray-100">
+                               Back
+                           </button>
+                           <img id="game-opponent-avatar" src="" class="w-10 h-10 rounded-full object-cover shadow-sm border border-gray-100">
+                           <div>
+                               <h2 id="game-opponent-username" class="font-bold text-gray-800 text-base leading-tight"></h2>
+                               <p id="game-opponent-status" class="text-xs text-indigo-500 font-medium mt-0.5">Playing...</p>
+                           </div>
+                       </div>
+                       <div class="flex gap-2">
+                           <button id="game-add-friend-btn" class="hidden bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-1.5 rounded-lg text-sm font-bold transition">Add Friend</button>
+                           <button id="game-quit-btn" class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg text-sm font-bold transition">Quit</button>
+                       </div>
+                    </div>
+                    
+                    <div class="flex-1 flex flex-col items-center justify-start overflow-y-auto bg-gray-50 p-4 pb-safe w-full">
+                        <div id="game-score-display" class="text-lg font-bold text-gray-600 mb-2">
+                            Score - You: <span id="my-score" class="text-indigo-600">0</span> | Opponent: <span id="opp-score" class="text-red-500">0</span>
+                        </div>
+                        <h3 id="game-status-text" class="text-2xl sm:text-3xl font-extrabold mb-6 text-gray-800">Your Turn</h3>
+                        
+                        <!-- Tic Tac Toe Board -->
+                        <div id="tictactoe-board" class="grid grid-cols-3 gap-2 sm:gap-3 bg-indigo-100 p-2 sm:p-3 rounded-2xl shadow-inner shrink-0 hidden">
+                            <div class="ttt-cell w-20 h-20 bg-white rounded-xl flex items-center justify-center text-5xl font-bold cursor-pointer hover:bg-gray-50 transition" data-index="0"></div>
+                            <div class="ttt-cell w-20 h-20 bg-white rounded-xl flex items-center justify-center text-5xl font-bold cursor-pointer hover:bg-gray-50 transition" data-index="1"></div>
+                            <div class="ttt-cell w-20 h-20 bg-white rounded-xl flex items-center justify-center text-5xl font-bold cursor-pointer hover:bg-gray-50 transition" data-index="2"></div>
+                            <div class="ttt-cell w-20 h-20 bg-white rounded-xl flex items-center justify-center text-5xl font-bold cursor-pointer hover:bg-gray-50 transition" data-index="3"></div>
+                            <div class="ttt-cell w-20 h-20 bg-white rounded-xl flex items-center justify-center text-5xl font-bold cursor-pointer hover:bg-gray-50 transition" data-index="4"></div>
+                            <div class="ttt-cell w-20 h-20 bg-white rounded-xl flex items-center justify-center text-5xl font-bold cursor-pointer hover:bg-gray-50 transition" data-index="5"></div>
+                            <div class="ttt-cell w-20 h-20 bg-white rounded-xl flex items-center justify-center text-5xl font-bold cursor-pointer hover:bg-gray-50 transition" data-index="6"></div>
+                            <div class="ttt-cell w-20 h-20 bg-white rounded-xl flex items-center justify-center text-5xl font-bold cursor-pointer hover:bg-gray-50 transition" data-index="7"></div>
+                            <div class="ttt-cell w-20 h-20 bg-white rounded-xl flex items-center justify-center text-5xl font-bold cursor-pointer hover:bg-gray-50 transition" data-index="8"></div>
+                        </div>
+
+                        <!-- Tebak Kata Board -->
+                        <div id="tebak-kata-board" class="flex flex-col items-center gap-4 w-full max-w-sm hidden">
+                            <div id="tebak-setup" class="w-full">
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Masukkan Kata Rahasia Kamu:</label>
+                                <input id="secret-word-input" type="text" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Contoh: Kucing">
+                                <button id="set-secret-word-btn" class="mt-2 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-xl transition">Mulai Main</button>
+                            </div>
+                            <div id="tebak-play" class="w-full hidden flex-col gap-4">
+                                <div class="bg-white p-4 rounded-xl border border-gray-200 w-full text-center">
+                                    <p class="text-sm text-gray-500 font-bold mb-2">Tebak Kata Lawan:</p>
+                                    <input id="guess-word-input" type="text" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-2" placeholder="Tebakanmu...">
+                                    <button id="send-guess-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl">Tebak</button>
+                                </div>
+                                <div id="tebak-eval" class="bg-white p-4 rounded-xl border border-gray-200 w-full text-center hidden">
+                                    <p class="text-sm text-gray-500 font-bold mb-2">Lawan menebak: <span id="opponent-guess-text" class="text-indigo-600 font-black"></span></p>
+                                    <div class="flex gap-2 justify-center">
+                                        <button class="eval-btn bg-green-500 text-white px-3 py-1.5 rounded-lg text-sm font-bold" data-val="Benar">Benar</button>
+                                        <button class="eval-btn bg-red-500 text-white px-3 py-1.5 rounded-lg text-sm font-bold" data-val="Salah">Salah</button>
+                                        <button class="eval-btn bg-yellow-500 text-white px-3 py-1.5 rounded-lg text-sm font-bold" data-val="Bisa Jadi">Bisa Jadi</button>
+                                    </div>
+                                </div>
+                                <div id="tebak-history" class="w-full bg-white p-3 rounded-xl border border-gray-200 h-32 overflow-y-auto text-sm space-y-1"></div>
+                            </div>
+                        </div>
+
+                        <div id="game-actions" class="mt-6 flex flex-col items-center gap-3 hidden shrink-0">
+                            <button id="play-again-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-xl transition shadow-sm active:scale-95">Play Again</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Options Modal -->
+    <div id="logout-modal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-slide-up flex flex-col gap-3">
+            <h3 class="text-xl font-bold text-gray-800 text-center mb-2">Opsi Keluar</h3>
+            <button id="modal-delete-acc-btn" class="w-full py-3.5 rounded-xl font-bold text-white bg-red-600 hover:bg-red-700 transition">Hapus Akun</button>
+            <button id="modal-logout-btn" class="w-full py-3.5 rounded-xl font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition">Keluar Akun</button>
+            <button id="modal-cancel-logout-btn" class="w-full py-3.5 rounded-xl font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition mt-2">Cancel</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, deleteUser } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, setDoc, getDoc, updateDoc, where, getDocs, limit, deleteDoc, increment } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDG3Etn46FE_79QQZuFnUJpY_fExfagSJc",
+            authDomain: "webchatmanzcode.firebaseapp.com",
+            projectId: "webchatmanzcode",
+            storageBucket: "webchatmanzcode.firebasestorage.app",
+            messagingSenderId: "449247016674",
+            appId: "1:449247016674:web:fb7a3d2710dc2c7f0c50bb"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        let currentUserDoc = null;
+        let currentMode = 'private'; 
+        let currentChatFriend = null;
+        let messagesUnsubscribe = null;
+
+        const loadingScreen = document.getElementById('loading-screen');
+        const joinScreen = document.getElementById('join-screen');
+        const mainScreen = document.getElementById('main-screen');
+        const messagesDiv = document.getElementById('messages');
+        const inputArea = document.getElementById('input-area');
+        const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        const sidebar = document.getElementById('sidebar');
+        const mainContentArea = document.getElementById('main-content-area');
+
+        // Logout Modal Logic
+        document.getElementById('leave-btn').addEventListener('click', () => {
+            document.getElementById('logout-modal').classList.remove('hidden');
+        });
+        document.getElementById('modal-cancel-logout-btn').addEventListener('click', () => {
+            document.getElementById('logout-modal').classList.add('hidden');
+        });
+        document.getElementById('modal-logout-btn').addEventListener('click', () => {
+            signOut(auth);
+            document.getElementById('logout-modal').classList.add('hidden');
+        });
+        document.getElementById('modal-delete-acc-btn').addEventListener('click', async () => {
+            if(confirm("Yakin ingin menghapus akun permanen?")) {
+                if(auth.currentUser) {
+                    try {
+                        await deleteDoc(doc(db, "users", auth.currentUser.uid));
+                        await deleteUser(auth.currentUser);
+                        document.getElementById('logout-modal').classList.add('hidden');
+                    } catch(e) {
+                        alert("Gagal menghapus akun. Coba login ulang lalu hapus.");
+                    }
+                }
+            }
+        });
+
+        onAuthStateChanged(auth, async (user) => {
+            loadingScreen.classList.add('hidden');
+            if (user) {
+                const userRef = doc(db, "users", user.uid);
+                const userSnap = await getDoc(userRef);
+                
+                if (!userSnap.exists()) {
+                    const generatedUsername = (user.displayName || 'User').replace(/\s+/g, '') + Math.floor(Math.random() * 1000);
+                    currentUserDoc = { uid: user.uid, username: generatedUsername, avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`, isOnline: true, points: 0 };
+                    await setDoc(userRef, currentUserDoc);
+                } else {
+                    currentUserDoc = userSnap.data();
+                    if(currentUserDoc.points === undefined) currentUserDoc.points = 0;
+                    await updateDoc(userRef, { isOnline: true });
+                }
+                
+                document.getElementById('my-avatar').src = currentUserDoc.avatar;
+                document.getElementById('my-username').innerText = currentUserDoc.username;
+                document.getElementById('my-points').innerText = `Poin: ${currentUserDoc.points}`;
+                
+                joinScreen.classList.add('hidden');
+                mainScreen.classList.remove('hidden');
+                mainScreen.classList.add('flex');
+            } else {
+                joinScreen.classList.remove('hidden');
+                joinScreen.classList.add('flex');
+                mainScreen.classList.add('hidden');
+                mainScreen.classList.remove('flex');
+                currentUserDoc = null;
+            }
+        });
+
+        document.getElementById('google-login-btn').addEventListener('click', () => signInWithPopup(auth, provider));
+
+        function switchTab(mode) {
+            currentMode = mode;
+            ['private', 'public', 'game'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.remove('text-indigo-600', 'border-indigo-600', 'bg-indigo-50/50');
+                document.getElementById(`tab-${t}`).classList.add('text-gray-500', 'border-transparent');
+                document.getElementById(`panel-${t}`).classList.add('hidden');
+            });
+            
+            document.getElementById(`tab-${mode}`).classList.remove('text-gray-500', 'border-transparent');
+            document.getElementById(`tab-${mode}`).classList.add('text-indigo-600', 'border-indigo-600', 'bg-indigo-50/50');
+            document.getElementById(`panel-${mode}`).classList.remove('hidden');
+            document.getElementById(`panel-${mode}`).classList.add('flex');
+            
+            document.getElementById('chat-header').classList.add('hidden');
+            messagesDiv.classList.add('hidden');
+            inputArea.classList.add('hidden');
+            document.getElementById('game-area').classList.add('hidden');
+
+            if(window.innerWidth < 768) {
+                sidebar.classList.remove('hidden');
+                mainContentArea.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('tab-private').addEventListener('click', () => switchTab('private'));
+        document.getElementById('tab-public').addEventListener('click', () => switchTab('public'));
+        document.getElementById('tab-game').addEventListener('click', () => switchTab('game'));
+
+        document.getElementById('back-to-sidebar-btn').addEventListener('click', () => {
+            sidebar.classList.remove('hidden');
+            mainContentArea.classList.add('hidden');
+        });
+
+        // Add User from input
+        document.getElementById('add-friend-btn').addEventListener('click', async () => {
+            const username = document.getElementById('friend-username-input').value.trim();
+            if(!username || username === currentUserDoc.username) return;
+            const q = query(collection(db, "users"), where("username", "==", username));
+            const snap = await getDocs(q);
+            if(!snap.empty) {
+                const friendDoc = snap.docs[0].data();
+                await setDoc(doc(db, "users", currentUserDoc.uid, "friends", friendDoc.uid), { uid: friendDoc.uid, username: friendDoc.username, avatar: friendDoc.avatar });
+                alert("Friend added!");
+            } else { 
+                alert("User not found!"); 
+            }
+        });
+
+        // Public Chat (Global)
+        document.getElementById('btn-global-chat').addEventListener('click', () => {
+            currentMode = 'public';
+            if (window.innerWidth < 768) {
+                sidebar.classList.add('hidden');
+                mainContentArea.classList.remove('hidden');
+            }
+            document.getElementById('chat-header').classList.remove('hidden');
+            messagesDiv.classList.remove('hidden');
+            inputArea.classList.remove('hidden');
+            document.getElementById('chat-display-name').innerText = 'Public Global Chat';
+            
+            if(messagesUnsubscribe) messagesUnsubscribe();
+            const q = query(collection(db, "public_messages"), orderBy("timestamp", "asc"));
+            messagesUnsubscribe = onSnapshot(q, (snapshot) => {
+                messagesDiv.innerHTML = '';
+                snapshot.forEach((docSnap) => displayMessage(docSnap.data(), docSnap.id));
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            });
+        });
+
+        // Add Friend from Public Chat & Game
+        window.addFriendFromAction = async (uid, username, avatar) => {
+            if(uid === currentUserDoc.uid) return;
+            if(confirm(`Tambahkan ${username} sebagai teman?`)) {
+                await setDoc(doc(db, "users", currentUserDoc.uid, "friends", uid), { uid, username, avatar });
+                alert(`${username} ditambahkan ke teman!`);
+            }
+        };
+
+        function displayMessage(msg, docId) {
+            const isMe = msg.senderId === currentUserDoc.uid;
+            const msgEl = document.createElement('div');
+            msgEl.className = `flex w-full space-x-2 max-w-[85%] md:max-w-[75%] animate-slide-up ${isMe ? 'ml-auto justify-end space-x-reverse' : ''}`;
+            
+            let avatarClick = !isMe && currentMode === 'public' ? `onclick="addFriendFromAction('${msg.senderId}', '${msg.senderName}', '${msg.avatar}')" class="cursor-pointer"` : '';
+
+            msgEl.innerHTML = `
+                ${!isMe && currentMode === 'public' ? `<img src="${msg.avatar}" ${avatarClick} class="h-8 w-8 rounded-full object-cover self-end mb-1 shadow-sm border border-gray-200" title="Click to add friend">` : ''}
+                <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-full">
+                    ${!isMe && currentMode === 'public' ? `<span ${avatarClick} class="text-[11px] text-gray-500 mb-1 px-1 font-bold hover:text-indigo-600 cursor-pointer">${msg.senderName}</span>` : ''}
+                    <div class="px-4 py-2.5 text-[15px] leading-relaxed shadow-sm break-words max-w-full ${isMe ? 'bg-indigo-600 text-white chat-bubble-me rounded-2xl rounded-tr-sm' : 'bg-white border border-gray-100 text-gray-800 chat-bubble-other rounded-2xl rounded-tl-sm'}">
+                        <span>${msg.text}</span>
+                    </div>
+                </div>
+            `;
+            messagesDiv.appendChild(msgEl);
+        }
+
+        sendBtn.addEventListener('click', async () => {
+            const text = messageInput.value.trim();
+            if(!text) return;
+            messageInput.value = '';
+            
+            const msgData = {
+                senderId: currentUserDoc.uid,
+                senderName: currentUserDoc.username,
+                avatar: currentUserDoc.avatar,
+                text: text,
+                timestamp: serverTimestamp()
+            };
+
+            if(currentMode === 'public') {
+                await addDoc(collection(db, "public_messages"), msgData);
+            }
+        });
+
+        // Points logic
+        async function addPoint() {
+            await updateDoc(doc(db, "users", currentUserDoc.uid), { points: increment(1) });
+            currentUserDoc.points += 1;
+            document.getElementById('my-points').innerText = `Poin: ${currentUserDoc.points}`;
+        }
+
+        // TEBAK KATA GAME LOGIC
+        let gameActive = false;
+        let isTebakKata = false;
+
+        document.getElementById('play-tebak-btn').addEventListener('click', () => {
+            isTebakKata = true;
+            if (window.innerWidth < 768) {
+                sidebar.classList.add('hidden');
+                mainContentArea.classList.remove('hidden');
+            }
+            document.getElementById('game-area').classList.remove('hidden');
+            document.getElementById('game-area').classList.add('flex');
+            
+            document.getElementById('tictactoe-board').classList.add('hidden');
+            document.getElementById('tebak-kata-board').classList.remove('hidden');
+            document.getElementById('tebak-kata-board').classList.add('flex');
+            
+            document.getElementById('tebak-setup').classList.remove('hidden');
+            document.getElementById('tebak-play').classList.add('hidden');
+            document.getElementById('tebak-play').classList.remove('flex');
+            
+            document.getElementById('game-status-text').innerText = "Tebak Kata";
+            document.getElementById('game-opponent-username').innerText = "Bot Tebak Kata";
+        });
+
+        let mySecretWord = "";
+        let botSecretWord = "KUCING"; // Simple bot logic
+
+        document.getElementById('set-secret-word-btn').addEventListener('click', () => {
+            mySecretWord = document.getElementById('secret-word-input').value.trim().toUpperCase();
+            if(!mySecretWord) return;
+            
+            document.getElementById('tebak-setup').classList.add('hidden');
+            document.getElementById('tebak-play').classList.remove('hidden');
+            document.getElementById('tebak-play').classList.add('flex');
+            document.getElementById('tebak-history').innerHTML = '';
+        });
+
+        document.getElementById('send-guess-btn').addEventListener('click', () => {
+            const guess = document.getElementById('guess-word-input').value.trim().toUpperCase();
+            if(!guess) return;
+            document.getElementById('guess-word-input').value = '';
+            
+            let result = "Salah";
+            if(guess === botSecretWord) result = "Benar";
+            else if(botSecretWord.includes(guess.substring(0,2))) result = "Bisa Jadi";
+
+            addHistory(`Kamu menebak: ${guess} -> Bot bilang: ${result}`);
+
+            if(result === "Benar") {
+                addPoint();
+                document.getElementById('game-status-text').innerText = "Kamu Menang! +1 Poin";
+                document.getElementById('game-actions').classList.remove('hidden');
+                return;
+            }
+
+            // Bot turn
+            setTimeout(() => {
+                const botGuess = mySecretWord.substring(0, Math.max(1, mySecretWord.length - 2)) + "X";
+                document.getElementById('opponent-guess-text').innerText = botGuess;
+                document.getElementById('tebak-eval').classList.remove('hidden');
+            }, 1000);
+        });
+
+        document.querySelectorAll('.eval-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const val = e.target.getAttribute('data-val');
+                document.getElementById('tebak-eval').classList.add('hidden');
+                addHistory(`Bot menebak -> Kamu bilang: ${val}`);
+                if(val === "Benar") {
+                    document.getElementById('game-status-text').innerText = "Bot Menang!";
+                    document.getElementById('game-actions').classList.remove('hidden');
+                }
+            });
+        });
+
+        function addHistory(text) {
+            const div = document.createElement('div');
+            div.innerText = text;
+            div.className = "border-b border-gray-100 pb-1";
+            document.getElementById('tebak-history').prepend(div);
+        }
+
+        document.getElementById('play-again-btn').addEventListener('click', () => {
+            document.getElementById('game-actions').classList.add('hidden');
+            if(isTebakKata) {
+                document.getElementById('tebak-setup').classList.remove('hidden');
+                document.getElementById('tebak-play').classList.add('hidden');
+                document.getElementById('tebak-play').classList.remove('flex');
+                document.getElementById('secret-word-input').value = '';
+            }
+        });
+
+        document.getElementById('back-from-game-btn').addEventListener('click', () => {
+            document.getElementById('game-area').classList.add('hidden');
+            document.getElementById('game-area').classList.remove('flex');
+            switchTab('game');
+        });
+        document.getElementById('game-quit-btn').addEventListener('click', () => {
+            document.getElementById('game-area').classList.add('hidden');
+            document.getElementById('game-area').classList.remove('flex');
+            switchTab('game');
+        });
+
+    </script>
+</body>
+</html>
