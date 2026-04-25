@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="google-site-verification" content="GvyTGbIx3Zov0CXr0f1voJ2LJnac-ppCl62NStzdY3E" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ManzChat - Live Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            .pb-safe { padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
+            .pt-safe { padding-top: max(0.75rem, env(safe-area-inset-top)); }
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes fall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        .animate-slide-up { animation: slideUp 0.4s ease-out forwards; }
+        .animate-pop { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .animate-fall { animation: fall linear forwards; }
+        .chat-bubble-me { border-bottom-right-radius: 4px; }
+        .chat-bubble-other { border-bottom-left-radius: 4px; }
+    </style>
+</head>
+<body class="flex items-center justify-center fixed inset-0 bg-gray-100 text-gray-800 font-sans overflow-hidden w-full h-full">
+    
+    <!-- Notification Bar -->
+    <div id="notification-bar" class="fixed top-4 md:top-6 left-1/2 transform -translate-x-1/2 bg-white border-l-4 border-indigo-600 text-gray-800 px-4 py-3 rounded-xl shadow-2xl z-[100] flex items-center gap-3 transition-transform duration-300 translate-y-[-150%] cursor-pointer min-w-[300px] max-w-[90%]">
+        <img id="notif-avatar" src="" class="w-10 h-10 rounded-full object-cover shadow-sm border border-gray-100">
+        <div class="flex flex-col overflow-hidden flex-1">
+            <span id="notif-title" class="font-bold text-sm truncate text-gray-800"></span>
+            <span id="notif-desc" class="text-xs text-gray-500 truncate mt-0.5"></span>
+        </div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-300">
+        <div class="flex flex-col items-center animate-slide-up">
+            <div class="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent mb-4 shadow-lg"></div>
+            <p class="text-indigo-600 font-bold tracking-wide">Loading ManzChat...</p>
+        </div>
+    </div>
+
+    <!-- Container -->
+    <div class="w-full h-full bg-white overflow-hidden flex border-none relative animate-fade-in">
+        
+        <!-- Join Screen -->
+        <div id="join-screen" class="hidden flex-col items-center justify-center w-full h-full p-6 sm:p-8 text-center bg-white absolute inset-0 z-40">
+            <div class="w-24 h-24 sm:w-28 sm:h-28 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mb-6 shadow-xl animate-slide-up">
+                <svg class="w-12 h-12 sm:w-14 sm:h-14 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+            </div>
+            <h2 class="text-4xl sm:text-5xl font-extrabold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 animate-slide-up" style="animation-delay: 0.1s">ManzChat</h2>
+            <p class="text-gray-500 mb-10 text-base sm:text-lg max-w-sm mx-auto animate-slide-up" style="animation-delay: 0.2s">Connect with friends and play games.</p>
+            
+            <div class="w-full max-w-sm space-y-4 text-left animate-slide-up" style="animation-delay: 0.3s">
+                <button id="google-login-btn" class="w-full bg-white border-2 border-gray-200 hover:border-indigo-100 hover:bg-indigo-50 active:scale-95 text-gray-700 font-bold py-3.5 px-4 rounded-2xl transition-all duration-200 shadow-sm flex items-center justify-center gap-3">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Continue with Google
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Dashboard & Chat Screen -->
+        <div id="main-screen" class="hidden w-full h-full flex-col md:flex-row relative bg-white">
+            
+            <!-- Sidebar -->
+            <div id="sidebar" class="w-full md:w-[320px] lg:w-[380px] bg-gray-50/80 backdrop-blur-md md:border-r border-gray-200 flex flex-col h-full absolute md:relative z-20 transition-transform duration-300 shadow-lg md:shadow-none">
+                <!-- Branding -->
+                <div class="p-5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white flex justify-between items-center shadow-md z-10 pt-safe shrink-0">
+                    <h1 class="text-2xl font-extrabold tracking-tight flex items-center gap-2">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                        ManzChat
+                    </h1>
+                    <button id="leave-btn" class="bg-white/20 hover:bg-white/30 rounded-full transition p-2 backdrop-blur-sm" title="Sign Out">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    </button>
+                </div>
+
+                <!-- User Profile -->
+                <div class="p-4 bg-white border-b border-gray-100 flex items-center justify-between shadow-sm relative z-10 shrink-0">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <div class="relative">
+                            <img id="my-avatar" src="" class="w-12 h-12 rounded-full object-cover border-2 border-indigo-100 shadow-sm flex-shrink-0">
+                            <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                        </div>
+                        <div class="flex flex-col truncate">
+                            <span class="font-bold text-gray-800 truncate text-base flex items-center gap-1">
+                                <span id="my-username"></span>
+                                <span id="my-points" class="text-xs bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded-md font-bold">⭐ 0</span>
+                            </span>
+                            <span id="my-status" class="text-xs text-green-500 font-semibold">Online</span>
+                        </div>
+                    </div>
+                    <button id="open-edit-modal-btn" class="text-gray-400 hover:text-indigo-600 transition p-2.5 bg-gray-50 hover:bg-indigo-50 rounded-full flex-shrink-0 border border-gray-100 shadow-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
+                    </button>
+                </div>
+
+                <!-- Tabs -->
+                <div class="flex bg-white border-b border-gray-200 shadow-sm relative z-10 shrink-0">
+                    <button id="tab-private" class="flex-1 py-3.5 text-sm font-bold text-indigo-600 border-b-[3px] border-indigo-600 transition flex items-center justify-center gap-1.5">
+                        Private
+                    </button>
+                    <button id="tab-public" class="flex-1 py-3.5 text-sm font-bold text-gray-500 border-b-[3px] border-transparent hover:text-indigo-500 hover:bg-gray-50 transition flex items-center justify-center gap-1.5">
+                        Public
+                    </button>
+                    <button id="tab-game" class="flex-1 py-3.5 text-sm font-bold text-gray-500 border-b-[3px] border-transparent hover:text-indigo-500 hover:bg-gray-50 transition flex items-center justify-center gap-1.5">
+                        Game
+                    </button>
+                </div>
+
+                <!-- Tab Content: Private Chats -->
+                <div id="panel-private" class="flex-1 flex flex-col min-h-0 overflow-hidden bg-white">
+                    <div class="p-3 border-b border-gray-100 bg-gray-50/50 shrink-0">
+                        <div class="flex gap-2 relative">
+                            <input id="friend-username-input" type="text" placeholder="Add friend by username..." class="flex-1 pl-3 pr-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm transition">
+                            <button id="add-friend-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition shadow-sm active:scale-95">Add</button>
+                        </div>
+                    </div>
+                    <div class="flex-1 min-h-0 overflow-y-auto p-2 pb-safe md:pb-2">
+                        <div id="friends-list" class="space-y-1"></div>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Public Zone -->
+                <div id="panel-public" class="hidden flex-1 flex-col min-h-0 overflow-y-auto bg-white p-4 items-center justify-center space-y-3">
+                    <button id="btn-global-chat" class="w-full max-w-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-sm">Chat Bebas (Global)</button>
+                    <div class="w-full max-w-xs mt-2 pt-4 border-t border-gray-100 flex flex-col items-center space-y-3">
+                        <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider">Chat Acak</h4>
+                        <select id="random-chat-pref" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 font-bold text-gray-700">
+                            <option value="Bebas">Bebas (Cowok/Cewek)</option>
+                            <option value="Cowok">Cari Cowok</option>
+                            <option value="Cewek">Cari Cewek</option>
+                        </select>
+                        <button id="btn-random-chat" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-sm">Mulai Chat Acak</button>
+                        <p id="random-chat-status" class="text-sm text-purple-500 font-semibold h-4"></p>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Game -->
+                <div id="panel-game" class="hidden flex-1 flex-col min-h-0 overflow-y-auto bg-white p-4 items-center justify-start space-y-3 pt-6">
+                    <h3 class="text-xl font-bold text-gray-800 w-full max-w-xs text-center border-b pb-2">Tic Tac Toe</h3>
+                    <button id="play-bot-btn" class="w-full max-w-xs bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 font-bold py-3 px-4 rounded-xl transition shadow-sm">Play vs Bot</button>
+                    <button id="find-match-btn" class="w-full max-w-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-sm">Find Online Match</button>
+                    <p id="match-status" class="text-sm text-indigo-500 font-semibold h-4"></p>
+
+                    <h3 class="text-xl font-bold text-gray-800 w-full max-w-xs text-center border-b pb-2 mt-4">Tebak Kata</h3>
+                    <button id="find-tebak-match-btn" class="w-full max-w-xs bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-sm">Find Online Match</button>
+                    <p id="tebak-match-status" class="text-sm text-green-500 font-semibold h-4"></p>
+                </div>
+
+            </div>
+            
+            <!-- Chat / Game Area -->
+            <div id="main-content-area" class="hidden md:flex flex-1 flex-col h-full overflow-hidden absolute md:relative inset-0 md:inset-auto z-30 md:z-10 animate-fade-in w-full bg-gray-50">
+                
+                <!-- Chat Header -->
+                <div id="chat-header" class="bg-white px-4 py-3 md:px-6 md:py-4 flex items-center justify-between shadow-sm border-b border-gray-200 z-20 hidden pt-safe shrink-0">
+                    <div class="flex items-center gap-3 md:gap-4">
+                        <button id="back-to-sidebar-btn" class="md:hidden p-2 -ml-2 text-gray-500 hover:text-indigo-600 transition rounded-full hover:bg-gray-100 active:bg-gray-200">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <div id="chat-user-profile" class="flex items-center gap-3 cursor-pointer p-1.5 -ml-1.5 rounded-xl hover:bg-gray-100 transition">
+                            <img id="chat-avatar" src="" class="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover shadow-sm border border-gray-100">
+                            <div class="flex flex-col">
+                                <h2 id="chat-display-name" class="font-bold text-gray-800 text-base md:text-lg leading-tight"></h2>
+                                <p id="chat-status" class="text-xs text-gray-500 font-medium mt-0.5"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="no-chat-header" class="absolute inset-0 flex-col items-center justify-center bg-gray-50/80 z-40 hidden animate-fade-in">
+                    <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-6 shadow-md text-indigo-300">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-700 mb-2">Welcome to ManzChat</h2>
+                    <p class="text-gray-500 text-center max-w-xs">Select a friend to start chatting or play a game.</p>
+                </div>
+                
+                <!-- Messages Area -->
+                <div id="messages" class="flex-1 min-h-0 overflow-y-auto p-4 md:p-6 space-y-5 bg-[#E5DDD5] hidden relative z-10" style="background-image: url('https://www.transparenttextures.com/patterns/cubes.png');"></div>
+                
+                <!-- Input Area -->
+                <div id="input-area" class="bg-white p-3 md:p-4 border-t border-gray-200 flex items-center gap-2 md:gap-3 pb-safe z-20 hidden shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] shrink-0 w-full">
+                    <input id="message-input" type="text" class="w-full px-4 py-3 bg-gray-100 border border-transparent rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-gray-800 text-sm md:text-base transition shadow-sm" placeholder="Type a message...">
+                    <button id="send-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full w-12 h-12 flex items-center justify-center transition duration-200 shadow-md flex-shrink-0 active:scale-95 group">
+                        <svg class="w-5 h-5 transform group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                    </button>
+                </div>
+
+                <!-- Game Area TTT -->
+                <div id="game-area" class="hidden flex-1 flex-col h-full bg-white z-20 absolute inset-0 w-full">
+                    <div class="bg-white px-4 py-3 md:px-6 md:py-4 flex items-center justify-between shadow-sm border-b border-gray-200 shrink-0 pt-safe">
+                       <div class="flex items-center gap-3">
+                           <button id="back-from-game-btn" class="md:hidden p-2 -ml-2 text-gray-500 hover:text-indigo-600 transition rounded-full hover:bg-gray-100">
+                               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                           </button>
+                           <img id="game-opponent-avatar" src="" class="w-10 h-10 rounded-full object-cover shadow-sm border border-gray-100">
+                           <div>
+                               <h2 id="game-opponent-username" class="font-bold text-gray-800 text-base leading-tight"></h2>
+                           </div>
+                       </div>
+                       <div class="flex gap-2">
+                           <button id="game-add-friend-btn" class="hidden bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-1.5 rounded-lg text-sm font-bold transition">Add Friend</button>
+                           <button id="game-quit-btn" class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg text-sm font-bold transition">Quit</button>
+                       </div>
+                    </div>
+                    
+                    <div class="flex-1 flex flex-col items-center justify-start overflow-y-auto bg-gray-50 p-4 pb-safe w-full">
+                        <h3 id="game-status-text" class="text-2xl sm:text-3xl font-extrabold mb-6 text-gray-800">Your Turn (X)</h3>
+                        <div id="tictactoe-board" class="grid grid-cols-3 gap-2 sm:gap-3 bg-indigo-100 p-2 sm:p-3 rounded-2xl shadow-inner shrink-0">
+                            <!-- 9 cells -->
+                            <div class="ttt-cell w-20 h-20 bg-white rounded-xl flex items-center justify-center text-5xl font-bold cursor-pointer" data-index="0"></div>
+                            <div class="ttt-cell w-20 h-20 bg-white rounded-xl flex items-center justify-center text-5xl font-bold cursor-pointer" data-index="1"></div>
+                            <div class="ttt-cell w-20 h-20 bg-white rounded-xl flex items-center justify-center text-5xl font-bold cursor-pointer" data-index="2"></div>
+                            <div class="ttt-cell w-20 h-20 bg-white rounded-xl flex items-center justify-center text-5xl font-bold cursor-pointer" data-index="3"></div>
+                            <div class="ttt-cell w-20 h-20 bg-white rounded-xl flex items-center justify-center text-5xl font-bold cursor-pointer" data-index="4"></div>
+                            <div class="ttt-cell w-20 h-20 bg-white rounded-xl flex items-center justify-center text-5xl font-bold cursor-pointer" data-index="5"></div>
+                            <div class="ttt-cell w-20 h-20 bg-white rounded-xl flex items-center justify-center text-5xl font-bold cursor-pointer" data-index="6"></div>
+                            <div class="ttt-cell w-20 h-20 bg-white rounded-xl flex items-center justify-center text-5xl font-bold cursor-pointer" data-index="7"></div>
+                            <div class="ttt-cell w-20 h-20 bg-white rounded-xl flex items-center justify-center text-5xl font-bold cursor-pointer" data-index="8"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Game Area Tebak Kata -->
+                <div id="tebak-area" class="hidden flex-1 flex-col h-full bg-white z-20 absolute inset-0 w-full">
+                    <div class="bg-white px-4 py-3 flex items-center justify-between shadow-sm border-b border-gray-200 shrink-0 pt-safe">
+                        <div class="flex items-center gap-3">
+                            <button id="back-from-tebak-btn" class="md:hidden p-2 -ml-2 text-gray-500 hover:text-green-600 transition rounded-full hover:bg-gray-100">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                            </button>
+                            <img id="tebak-opponent-avatar" src="" class="w-10 h-10 rounded-full object-cover shadow-sm border border-gray-100">
+                            <div><h2 id="tebak-opponent-username" class="font-bold text-gray-800 text-base leading-tight"></h2></div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="tebak-add-friend-btn" class="hidden bg-green-50 text-green-600 hover:bg-green-100 px-3 py-1.5 rounded-lg text-sm font-bold transition">Add Friend</button>
+                            <button id="tebak-quit-btn" class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg text-sm font-bold transition">Quit</button>
+                        </div>
+                    </div>
+                    
+                    <div id="tebak-setup" class="flex flex-col items-center justify-center p-6 flex-1">
+                        <h3 class="text-xl font-bold mb-4">Masukkan Kata Rahasiamu</h3>
+                        <input type="text" id="tebak-secret-word" class="px-4 py-3 border border-gray-300 rounded-xl mb-4 w-full max-w-xs text-center font-bold uppercase" placeholder="KATA">
+                        <button id="tebak-ready-btn" class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-bold shadow-md">Ready</button>
+                        <p id="tebak-setup-status" class="mt-4 text-sm text-gray-500 font-bold"></p>
+                    </div>
+
+                    <div id="tebak-play" class="hidden flex-col items-center p-6 w-full flex-1 bg-gray-50 overflow-y-auto">
+                        <div id="tebak-turn-status" class="text-xl font-bold mb-6 text-gray-800"></div>
+                        
+                        <div id="tebak-guess-container" class="flex gap-2 w-full max-w-sm mb-4">
+                            <input type="text" id="tebak-guess-input" class="flex-1 border border-gray-300 rounded-xl px-4 py-3 uppercase font-bold text-center" placeholder="Tebak kata lawan...">
+                            <button id="tebak-guess-btn" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold">Tebak</button>
+                        </div>
+
+                        <div id="tebak-response-container" class="hidden flex-col gap-3 mb-6 w-full max-w-sm bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                            <p class="w-full text-center text-gray-600 text-sm">Lawan menebak:</p>
+                            <p id="tebak-current-guess" class="text-2xl font-black text-center text-indigo-600 uppercase tracking-widest mb-2"></p>
+                            <div class="flex gap-2 justify-center">
+                                <button id="tebak-resp-benar" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 rounded-xl font-bold">Benar</button>
+                                <button id="tebak-resp-salah" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded-xl font-bold">Salah</button>
+                                <button id="tebak-resp-bisajadi" class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-xl font-bold">Bisa Jadi</button>
+                            </div>
+                        </div>
+
+                        <div id="tebak-history" class="w-full max-w-sm flex-1 overflow-y-auto bg-white border border-gray-200 p-3 rounded-xl space-y-2 text-sm shadow-inner"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="logout-modal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-slide-up flex flex-col gap-3 text-center">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Pilih Aksi</h3>
+            <button id="btn-delete-account" class="w-full py-3.5 rounded-xl font-bold text-white bg-red-600 hover:bg-red-700 transition">Hapus Akun</button>
+            <button id="btn-logout-account" class="w-full py-3.5 rounded-xl font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition">Keluar Akun</button>
+            <button id="btn-cancel-logout" class="w-full py-3.5 mt-2 rounded-xl font-bold text-gray-500 bg-transparent hover:bg-gray-50 transition">Cancel</button>
+        </div>
+    </div>
+
+    <div id="public-user-modal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-slide-up flex flex-col items-center text-center gap-3">
+            <img id="pu-avatar" src="" class="w-20 h-20 rounded-full object-cover shadow-sm mb-2">
+            <h3 id="pu-name" class="text-xl font-bold text-gray-800"></h3>
+            <button id="pu-add-friend-btn" class="w-full py-3.5 mt-4 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition">Add Friend</button>
+            <button id="pu-close-btn" class="w-full py-3.5 rounded-xl font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 transition">Close</button>
+        </div>
+    </div>
+
+    <div id="edit-modal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl p-6 md:p-8 w-full max-w-sm shadow-2xl animate-slide-up">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Edit Profile</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Username</label>
+                    <input id="edit-username" type="text" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition font-medium">
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button id="close-modal-btn" class="px-5 py-2.5 text-gray-600 font-bold hover:bg-gray-100 rounded-xl transition">Cancel</button>
+                    <button id="save-profile-btn" class="px-5 py-2.5 bg-indigo-600 font-bold text-white rounded-xl hover:bg-indigo-700 shadow-md transition flex items-center justify-center min-w-[100px] active:scale-95">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, setDoc, getDoc, updateDoc, where, getDocs, limit, deleteDoc, increment } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDG3Etn46FE_79QQZuFnUJpY_fExfagSJc",
+            authDomain: "webchatmanzcode.firebaseapp.com",
+            projectId: "webchatmanzcode",
+            storageBucket: "webchatmanzcode.firebasestorage.app",
+            messagingSenderId: "449247016674",
+            appId: "1:449247016674:web:fb7a3d2710dc2c7f0c50bb"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        let currentUserDoc = null;
+        let currentMode = 'private'; 
+        let currentChatFriend = null;
+        let messagesUnsubscribe = null;
+        let friendsUnsubscribe = null;
+        let publicUnsubscribe = null;
+
+        // Elements
+        const loadingScreen = document.getElementById('loading-screen');
+        const joinScreen = document.getElementById('join-screen');
+        const mainScreen = document.getElementById('main-screen');
+        const chatHeader = document.getElementById('chat-header');
+        const noChatHeader = document.getElementById('no-chat-header');
+        const messagesDiv = document.getElementById('messages');
+        const inputArea = document.getElementById('input-area');
+        const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        const friendsList = document.getElementById('friends-list');
+        const panelPrivate = document.getElementById('panel-private');
+        const panelPublic = document.getElementById('panel-public');
+        const sidebar = document.getElementById('sidebar');
+        const mainContentArea = document.getElementById('main-content-area');
+
+        onAuthStateChanged(auth, async (user) => {
+            loadingScreen.classList.add('hidden');
+            if (user) {
+                const userRef = doc(db, "users", user.uid);
+                const userSnap = await getDoc(userRef);
+                
+                if (!userSnap.exists()) {
+                    const generatedUsername = (user.displayName || 'User').replace(/\s+/g, '') + Math.floor(Math.random() * 1000);
+                    currentUserDoc = { uid: user.uid, username: generatedUsername, avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`, isOnline: true, points: 0 };
+                    await setDoc(userRef, currentUserDoc);
+                } else {
+                    currentUserDoc = userSnap.data();
+                    if(currentUserDoc.points === undefined) currentUserDoc.points = 0;
+                    await updateDoc(userRef, { isOnline: true });
+                }
+
+                // Sync profile points
+                onSnapshot(userRef, (snap) => {
+                    if(snap.exists()) {
+                        currentUserDoc = snap.data();
+                        document.getElementById('my-points').innerText = `⭐ ${currentUserDoc.points || 0}`;
+                    }
+                });
+
+                document.getElementById('my-avatar').src = currentUserDoc.avatar;
+                document.getElementById('my-username').innerText = currentUserDoc.username;
+                document.getElementById('edit-username').value = currentUserDoc.username;
+                
+                joinScreen.classList.add('hidden');
+                mainScreen.classList.remove('hidden');
+                mainScreen.classList.add('flex');
+                
+                loadFriends();
+                switchTab('private');
+            } else {
+                joinScreen.classList.remove('hidden');
+                joinScreen.classList.add('flex');
+                mainScreen.classList.add('hidden');
+                mainScreen.classList.remove('flex');
+                currentUserDoc = null;
+            }
+        });
+
+        document.getElementById('google-login-btn').addEventListener('click', () => signInWithPopup(auth, provider));
+        
+        // Logout Modal
+        document.getElementById('leave-btn').addEventListener('click', () => {
+            document.getElementById('logout-modal').classList.remove('hidden');
+        });
+        document.getElementById('btn-cancel-logout').addEventListener('click', () => {
+            document.getElementById('logout-modal').classList.add('hidden');
+        });
+        document.getElementById('btn-logout-account').addEventListener('click', () => {
+            if(currentUserDoc) updateDoc(doc(db, "users", currentUserDoc.uid), { isOnline: false });
+            signOut(auth);
+            document.getElementById('logout-modal').classList.add('hidden');
+        });
+        document.getElementById('btn-delete-account').addEventListener('click', async () => {
+            if(confirm("Apakah kamu yakin ingin menghapus akun permanen?")) {
+                try {
+                    await deleteDoc(doc(db, "users", currentUserDoc.uid));
+                    await auth.currentUser.delete();
+                    document.getElementById('logout-modal').classList.add('hidden');
+                } catch(e) {
+                    alert("Gagal menghapus akun. Silakan login ulang dan coba lagi.");
+                }
+            }
+        });
+
+        function switchTab(mode) {
+            currentMode = mode;
+            ['private', 'public', 'game'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.remove('text-indigo-600', 'border-indigo-600', 'bg-indigo-50/50');
+                document.getElementById(`tab-${t}`).classList.add('text-gray-500', 'border-transparent');
+            });
+            
+            document.getElementById(`tab-${mode}`).classList.remove('text-gray-500', 'border-transparent');
+            document.getElementById(`tab-${mode}`).classList.add('text-indigo-600', 'border-indigo-600', 'bg-indigo-50/50');
+            
+            chatHeader.classList.add('hidden');
+            noChatHeader.classList.add('hidden');
+            noChatHeader.classList.remove('flex');
+            messagesDiv.classList.add('hidden');
+            inputArea.classList.add('hidden');
+            panelPrivate.classList.add('hidden');
+            panelPublic.classList.add('hidden');
+            document.getElementById('panel-game').classList.add('hidden');
+            document.getElementById('game-area').classList.add('hidden');
+            document.getElementById('tebak-area').classList.add('hidden');
+
+            if(messagesUnsubscribe) messagesUnsubscribe();
+            if(publicUnsubscribe) publicUnsubscribe();
+            
+            if (mode === 'private') {
+                panelPrivate.classList.remove('hidden');
+                panelPrivate.classList.add('flex');
+                if (window.innerWidth >= 768) { noChatHeader.classList.remove('hidden'); noChatHeader.classList.add('flex'); mainContentArea.classList.remove('hidden'); mainContentArea.classList.add('flex'); }
+            } else if (mode === 'public') {
+                panelPublic.classList.remove('hidden');
+                panelPublic.classList.add('flex');
+                if (window.innerWidth >= 768) { noChatHeader.classList.remove('hidden'); noChatHeader.classList.add('flex'); mainContentArea.classList.remove('hidden'); mainContentArea.classList.add('flex'); }
+            } else if (mode === 'game') {
+                document.getElementById('panel-game').classList.remove('hidden');
+                document.getElementById('panel-game').classList.add('flex');
+                if (window.innerWidth >= 768) { noChatHeader.classList.remove('hidden'); noChatHeader.classList.add('flex'); mainContentArea.classList.remove('hidden'); mainContentArea.classList.add('flex'); }
+            }
+        }
+
+        document.getElementById('tab-private').addEventListener('click', () => switchTab('private'));
+        document.getElementById('tab-public').addEventListener('click', () => switchTab('public'));
+        document.getElementById('tab-game').addEventListener('click', () => switchTab('game'));
+        
+        document.getElementById('back-to-sidebar-btn').addEventListener('click', () => {
+            sidebar.classList.remove('hidden');
+            mainContentArea.classList.add('hidden');
+            mainContentArea.classList.remove('flex');
+        });
+
+        function loadFriends() {
+            const q = query(collection(db, "users", currentUserDoc.uid, "friends"));
+            friendsUnsubscribe = onSnapshot(q, (snapshot) => {
+                friendsList.innerHTML = '';
+                snapshot.forEach((docSnap) => {
+                    const friendRel = docSnap.data();
+                    const div = document.createElement('div');
+                    div.className = "flex items-center gap-3 p-3 hover:bg-white rounded-xl cursor-pointer transition mb-1";
+                    div.innerHTML = `
+                        <img src="${friendRel.avatar}" class="w-12 h-12 rounded-full object-cover border border-gray-100">
+                        <span class="font-bold text-gray-800 text-sm truncate">${friendRel.username}</span>
+                    `;
+                    div.onclick = () => openPrivateChat(friendRel);
+                    friendsList.appendChild(div);
+                });
+            });
+        }
+
+        document.getElementById('add-friend-btn').addEventListener('click', async () => {
+            const username = document.getElementById('friend-username-input').value.trim();
+            if(!username || username === currentUserDoc.username) return;
+            const q = query(collection(db, "users"), where("username", "==", username));
+            const snap = await getDocs(q);
+            if(!snap.empty) {
+                const friendDoc = snap.docs[0].data();
+                await setDoc(doc(db, "users", currentUserDoc.uid, "friends", friendDoc.uid), { uid: friendDoc.uid, username: friendDoc.username, avatar: friendDoc.avatar });
+                await setDoc(doc(db, "users", friendDoc.uid, "friends", currentUserDoc.uid), { uid: currentUserDoc.uid, username: currentUserDoc.username, avatar: currentUserDoc.avatar });
+                document.getElementById('friend-username-input').value = '';
+                alert("Friend added!");
+            } else { alert("User not found!"); }
+        });
+
+        window.openPrivateChat = function(friend) {
+            currentMode = 'private';
+            currentChatFriend = friend;
+            if (window.innerWidth < 768) { sidebar.classList.add('hidden'); mainContentArea.classList.remove('hidden'); mainContentArea.classList.add('flex'); }
+            noChatHeader.classList.add('hidden'); noChatHeader.classList.remove('flex');
+            chatHeader.classList.remove('hidden'); messagesDiv.classList.remove('hidden'); inputArea.classList.remove('hidden');
+            
+            document.getElementById('chat-avatar').src = friend.avatar;
+            document.getElementById('chat-display-name').innerText = friend.username;
+            
+            if(messagesUnsubscribe) messagesUnsubscribe();
+            const chatId = currentUserDoc.uid < friend.uid ? `${currentUserDoc.uid}_${friend.uid}` : `${friend.uid}_${currentUserDoc.uid}`;
+            const q = query(collection(db, "chats", chatId, "messages"), orderBy("timestamp", "asc"));
+            messagesUnsubscribe = onSnapshot(q, (snapshot) => {
+                messagesDiv.innerHTML = '';
+                snapshot.forEach((docSnap) => displayMessage(docSnap.data(), docSnap.id));
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            });
+        };
+
+        // Public Chat & User Profile Modal
+        window.showPublicUserProfile = (uid, username, avatar) => {
+            if(uid === currentUserDoc.uid) return;
+            document.getElementById('pu-avatar').src = avatar;
+            document.getElementById('pu-name').innerText = username;
+            document.getElementById('public-user-modal').classList.remove('hidden');
+            
+            document.getElementById('pu-add-friend-btn').onclick = async () => {
+                await setDoc(doc(db, "users", currentUserDoc.uid, "friends", uid), { uid: uid, username: username, avatar: avatar });
+                await setDoc(doc(db, "users", uid, "friends", currentUserDoc.uid), { uid: currentUserDoc.uid, username: currentUserDoc.username, avatar: currentUserDoc.avatar });
+                alert("Friend added!");
+                document.getElementById('public-user-modal').classList.add('hidden');
+            };
+        };
+        document.getElementById('pu-close-btn').addEventListener('click', () => {
+            document.getElementById('public-user-modal').classList.add('hidden');
+        });
+
+        document.getElementById('btn-global-chat').addEventListener('click', () => {
+            currentMode = 'public';
+            if (window.innerWidth < 768) { sidebar.classList.add('hidden'); mainContentArea.classList.remove('hidden'); mainContentArea.classList.add('flex'); }
+            noChatHeader.classList.add('hidden'); noChatHeader.classList.remove('flex');
+            chatHeader.classList.remove('hidden'); messagesDiv.classList.remove('hidden'); inputArea.classList.remove('hidden');
+            document.getElementById('chat-avatar').src = 'https://api.dicebear.com/7.x/shapes/svg?seed=public';
+            document.getElementById('chat-display-name').innerText = 'Public Global Chat';
+            
+            if(publicUnsubscribe) publicUnsubscribe();
+            const q = query(collection(db, "public_messages"), orderBy("timestamp", "asc"));
+            publicUnsubscribe = onSnapshot(q, (snapshot) => {
+                messagesDiv.innerHTML = '';
+                snapshot.forEach((docSnap) => displayMessage(docSnap.data(), docSnap.id));
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            });
+        });
+
+        function displayMessage(msg, docId) {
+            const isMe = msg.senderId === currentUserDoc.uid;
+            const msgEl = document.createElement('div');
+            msgEl.className = `flex w-full space-x-2 max-w-[85%] animate-slide-up ${isMe ? 'ml-auto justify-end space-x-reverse' : ''}`;
+            
+            let avatarHtml = '';
+            if(!isMe && currentMode === 'public') {
+                avatarHtml = `<img src="${msg.avatar}" class="h-8 w-8 rounded-full object-cover self-end mb-1 cursor-pointer" onclick="showPublicUserProfile('${msg.senderId}', '${msg.senderName}', '${msg.avatar}')">`;
+            }
+
+            msgEl.innerHTML = `
+                ${avatarHtml}
+                <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-full">
+                    ${!isMe && currentMode === 'public' ? `<span class="text-[11px] text-gray-500 mb-1 px-1">${msg.senderName}</span>` : ''}
+                    <div class="px-4 py-2.5 text-[15px] shadow-sm break-words max-w-full ${isMe ? 'bg-indigo-600 text-white rounded-2xl rounded-tr-sm' : 'bg-white border border-gray-100 text-gray-800 rounded-2xl rounded-tl-sm'}">
+                        <span>${msg.text}</span>
+                    </div>
+                </div>
+            `;
+            messagesDiv.appendChild(msgEl);
+        }
+
+        sendBtn.addEventListener('click', async () => {
+            const text = messageInput.value.trim();
+            if(!text) return;
+            messageInput.value = '';
+            const msgData = { senderId: currentUserDoc.uid, senderName: currentUserDoc.username, avatar: currentUserDoc.avatar, text: text, timestamp: serverTimestamp() };
+            if(currentMode === 'private' && currentChatFriend) {
+                const chatId = currentUserDoc.uid < currentChatFriend.uid ? `${currentUserDoc.uid}_${currentChatFriend.uid}` : `${currentChatFriend.uid}_${currentUserDoc.uid}`;
+                await addDoc(collection(db, "chats", chatId, "messages"), msgData);
+            } else if(currentMode === 'public') {
+                await addDoc(collection(db, "public_messages"), msgData);
+            }
+        });
+
+        // TTT Logic (simplified)
+        let tttId = null;
+        let tttUnsub = null;
+        document.getElementById('find-match-btn').addEventListener('click', async () => {
+            document.getElementById('match-status').innerText = "Searching...";
+            await setDoc(doc(db, "tictactoe_queue", currentUserDoc.uid), { uid: currentUserDoc.uid, username: currentUserDoc.username, avatar: currentUserDoc.avatar, timestamp: serverTimestamp() });
+            const queueSnap = await getDocs(query(collection(db, "tictactoe_queue"), orderBy("timestamp", "asc")));
+            let opponent = null;
+            queueSnap.forEach(d => { if(d.id !== currentUserDoc.uid && !opponent) opponent = d.data(); });
+            if(opponent) {
+                const gameId = `${opponent.uid}_${currentUserDoc.uid}`;
+                await setDoc(doc(db, "tictactoe_games", gameId), { player1: opponent, player2: {uid: currentUserDoc.uid, username: currentUserDoc.username, avatar: currentUserDoc.avatar}, status: 'playing', turn: 'X', board: ['','','','','','','','',''] });
+                await deleteDoc(doc(db, "tictactoe_queue", currentUserDoc.uid));
+                await deleteDoc(doc(db, "tictactoe_queue", opponent.uid));
+                joinTTT(gameId);
+            } else {
+                onSnapshot(query(collection(db, "tictactoe_games"), where("player1.uid", "==", currentUserDoc.uid), where("status", "==", "playing")), (snap) => {
+                    if(!snap.empty) joinTTT(snap.docs[0].id);
+                });
+            }
+        });
+
+        function joinTTT(gameId) {
+            tttId = gameId;
+            document.getElementById('match-status').innerText = "";
+            if (window.innerWidth < 768) { sidebar.classList.add('hidden'); mainContentArea.classList.remove('hidden'); mainContentArea.classList.add('flex'); }
+            noChatHeader.classList.add('hidden'); noChatHeader.classList.remove('flex');
+            document.getElementById('game-area').classList.remove('hidden'); document.getElementById('game-area').classList.add('flex');
+            
+            tttUnsub = onSnapshot(doc(db, "tictactoe_games", gameId), async (snap) => {
+                const data = snap.data();
+                if(data.status === 'quit') return;
+                const isP1 = data.player1.uid === currentUserDoc.uid;
+                document.getElementById('game-opponent-username').innerText = isP1 ? data.player2.username : data.player1.username;
+                document.getElementById('game-opponent-avatar').src = isP1 ? data.player2.avatar : data.player1.avatar;
+                
+                document.getElementById('game-add-friend-btn').classList.remove('hidden');
+                document.getElementById('game-add-friend-btn').onclick = async () => {
+                    const opp = isP1 ? data.player2 : data.player1;
+                    await setDoc(doc(db, "users", currentUserDoc.uid, "friends", opp.uid), { uid: opp.uid, username: opp.username, avatar: opp.avatar });
+                    await setDoc(doc(db, "users", opp.uid, "friends", currentUserDoc.uid), { uid: currentUserDoc.uid, username: currentUserDoc.username, avatar: currentUserDoc.avatar });
+                    alert("Added!");
+                };
+
+                const mySym = isP1 ? 'X' : 'O';
+                document.querySelectorAll('.ttt-cell').forEach((el, i) => el.innerText = data.board[i]);
+                document.getElementById('game-status-text').innerText = data.turn === mySym ? "Your Turn" : "Opponent's Turn";
+
+                if(data.winner) {
+                    if(data.winner === mySym) {
+                        document.getElementById('game-status-text').innerText = "You Win! +1 Point";
+                        if(data.status === 'playing') {
+                            await updateDoc(doc(db, "tictactoe_games", gameId), { status: 'finished' });
+                            await updateDoc(doc(db, "users", currentUserDoc.uid), { points: increment(1) });
+                        }
+                    } else if(data.winner === 'Draw') {
+                        document.getElementById('game-status-text').innerText = "Draw!";
+                    } else {
+                        document.getElementById('game-status-text').innerText = "You Lose!";
+                    }
+                }
+            });
+        }
+
+        document.getElementById('game-quit-btn').addEventListener('click', () => {
+            if(tttId) updateDoc(doc(db, "tictactoe_games", tttId), { status: 'quit' });
+            document.getElementById('game-area').classList.add('hidden'); document.getElementById('game-area').classList.remove('flex');
+            switchTab('game');
+        });
+
+        // Tebak Kata Logic
+        let tebakId = null;
+        let tebakUnsub = null;
+        let isTebakP1 = false;
+
+        document.getElementById('find-tebak-match-btn').addEventListener('click', async () => {
+            document.getElementById('tebak-match-status').innerText = "Searching...";
+            await setDoc(doc(db, "tebak_queue", currentUserDoc.uid), { uid: currentUserDoc.uid, username: currentUserDoc.username, avatar: currentUserDoc.avatar, timestamp: serverTimestamp() });
+            const queueSnap = await getDocs(query(collection(db, "tebak_queue"), orderBy("timestamp", "asc")));
+            let opponent = null;
+            queueSnap.forEach(d => { if(d.id !== currentUserDoc.uid && !opponent) opponent = d.data(); });
+            
+            if(opponent) {
+                const gameId = `${opponent.uid}_${currentUserDoc.uid}`;
+                await setDoc(doc(db, "tebak_games", gameId), { 
+                    player1: opponent, player2: {uid: currentUserDoc.uid, username: currentUserDoc.username, avatar: currentUserDoc.avatar}, 
+                    status: 'setup', word1: '', word2: '', ready1: false, ready2: false, turn: 1, currentGuess: '', guessState: 'none', history: []
+                });
+                await deleteDoc(doc(db, "tebak_queue", currentUserDoc.uid));
+                await deleteDoc(doc(db, "tebak_queue", opponent.uid));
+                joinTebak(gameId);
+            } else {
+                onSnapshot(query(collection(db, "tebak_games"), where("player1.uid", "==", currentUserDoc.uid), where("status", "==", "setup")), (snap) => {
+                    if(!snap.empty) joinTebak(snap.docs[0].id);
+                });
+            }
+        });
+
+        function joinTebak(gameId) {
+            tebakId = gameId;
+            document.getElementById('tebak-match-status').innerText = "";
+            if (window.innerWidth < 768) { sidebar.classList.add('hidden'); mainContentArea.classList.remove('hidden'); mainContentArea.classList.add('flex'); }
+            noChatHeader.classList.add('hidden'); noChatHeader.classList.remove('flex');
+            document.getElementById('tebak-area').classList.remove('hidden'); document.getElementById('tebak-area').classList.add('flex');
+            
+            document.getElementById('tebak-setup').classList.remove('hidden'); document.getElementById('tebak-setup').classList.add('flex');
+            document.getElementById('tebak-play').classList.add('hidden'); document.getElementById('tebak-play').classList.remove('flex');
+            document.getElementById('tebak-secret-word').value = '';
+
+            tebakUnsub = onSnapshot(doc(db, "tebak_games", gameId), async (snap) => {
+                const data = snap.data();
+                if(!data || data.status === 'quit') {
+                    document.getElementById('tebak-turn-status').innerText = "Lawan keluar.";
+                    return;
+                }
+                isTebakP1 = data.player1.uid === currentUserDoc.uid;
+                const opp = isTebakP1 ? data.player2 : data.player1;
+                document.getElementById('tebak-opponent-username').innerText = opp.username;
+                document.getElementById('tebak-opponent-avatar').src = opp.avatar;
+
+                document.getElementById('tebak-add-friend-btn').classList.remove('hidden');
+                document.getElementById('tebak-add-friend-btn').onclick = async () => {
+                    await setDoc(doc(db, "users", currentUserDoc.uid, "friends", opp.uid), { uid: opp.uid, username: opp.username, avatar: opp.avatar });
+                    await setDoc(doc(db, "users", opp.uid, "friends", currentUserDoc.uid), { uid: currentUserDoc.uid, username: currentUserDoc.username, avatar: currentUserDoc.avatar });
+                    alert("Added!");
+                };
+
+                if(data.status === 'setup') {
+                    const myReady = isTebakP1 ? data.ready1 : data.ready2;
+                    const oppReady = isTebakP1 ? data.ready2 : data.ready1;
+                    if(myReady && !oppReady) document.getElementById('tebak-setup-status').innerText = "Menunggu lawan siap...";
+                    if(data.ready1 && data.ready2 && isTebakP1) {
+                        await updateDoc(doc(db, "tebak_games", gameId), { status: 'playing' });
+                    }
+                } else if(data.status === 'playing' || data.status === 'finished') {
+                    document.getElementById('tebak-setup').classList.add('hidden'); document.getElementById('tebak-setup').classList.remove('flex');
+                    document.getElementById('tebak-play').classList.remove('hidden'); document.getElementById('tebak-play').classList.add('flex');
+
+                    const myTurn = (isTebakP1 && data.turn === 1) || (!isTebakP1 && data.turn === 2);
+                    
+                    document.getElementById('tebak-history').innerHTML = data.history.map(h => `<div class="p-2 border-b">${h}</div>`).join('');
+
+                    if(data.status === 'finished') {
+                        document.getElementById('tebak-guess-container').classList.add('hidden');
+                        document.getElementById('tebak-response-container').classList.add('hidden');
+                        if(data.winner === currentUserDoc.uid) {
+                            document.getElementById('tebak-turn-status').innerText = "Kamu Menang! +1 Point";
+                        } else {
+                            document.getElementById('tebak-turn-status').innerText = "Kamu Kalah!";
+                        }
+                        return;
+                    }
+
+                    if(data.guessState === 'none') {
+                        document.getElementById('tebak-response-container').classList.add('hidden');
+                        document.getElementById('tebak-response-container').classList.remove('flex');
+                        if(myTurn) {
+                            document.getElementById('tebak-turn-status').innerText = "Giliranmu Menebak";
+                            document.getElementById('tebak-guess-container').classList.remove('hidden');
+                        } else {
+                            document.getElementById('tebak-turn-status').innerText = "Lawan Sedang Menebak...";
+                            document.getElementById('tebak-guess-container').classList.add('hidden');
+                        }
+                    } else if(data.guessState === 'waiting_response') {
+                        document.getElementById('tebak-guess-container').classList.add('hidden');
+                        if(myTurn) {
+                            document.getElementById('tebak-turn-status').innerText = "Menunggu Jawaban Lawan...";
+                            document.getElementById('tebak-response-container').classList.add('hidden');
+                        } else {
+                            document.getElementById('tebak-turn-status').innerText = "Beri Jawaban";
+                            document.getElementById('tebak-current-guess').innerText = data.currentGuess;
+                            document.getElementById('tebak-response-container').classList.remove('hidden');
+                            document.getElementById('tebak-response-container').classList.add('flex');
+                        }
+                    }
+                }
+            });
+        }
+
+        document.getElementById('tebak-ready-btn').addEventListener('click', async () => {
+            const word = document.getElementById('tebak-secret-word').value.trim().toUpperCase();
+            if(!word) return;
+            document.getElementById('tebak-ready-btn').disabled = true;
+            await updateDoc(doc(db, "tebak_games", tebakId), {
+                [isTebakP1 ? 'word1' : 'word2']: word,
+                [isTebakP1 ? 'ready1' : 'ready2']: true
+            });
+        });
+
+        document.getElementById('tebak-guess-btn').addEventListener('click', async () => {
+            const guess = document.getElementById('tebak-guess-input').value.trim().toUpperCase();
+            if(!guess) return;
+            document.getElementById('tebak-guess-input').value = '';
+            await updateDoc(doc(db, "tebak_games", tebakId), {
+                currentGuess: guess,
+                guessState: 'waiting_response'
+            });
+        });
+
+        const handleResponse = async (respText, isWin) => {
+            const gameDoc = await getDoc(doc(db, "tebak_games", tebakId));
+            const data = gameDoc.data();
+            const guesserName = isTebakP1 ? data.player2.username : data.player1.username; // since it's opponent's turn to guess
+            const histText = `<b>${guesserName}</b> menebak: <span class="text-indigo-600">${data.currentGuess}</span> -> <b>${respText}</b>`;
+            
+            let updates = {
+                guessState: 'none',
+                turn: data.turn === 1 ? 2 : 1,
+                history: [...data.history, histText]
+            };
+
+            if(isWin) {
+                updates.status = 'finished';
+                updates.winner = isTebakP1 ? data.player2.uid : data.player1.uid; // guesser wins
+                const winnerUid = updates.winner;
+                await updateDoc(doc(db, "users", winnerUid), { points: increment(1) });
+            }
+
+            await updateDoc(doc(db, "tebak_games", tebakId), updates);
+        };
+
+        document.getElementById('tebak-resp-benar').addEventListener('click', () => handleResponse('BENAR 🎉', true));
+        document.getElementById('tebak-resp-salah').addEventListener('click', () => handleResponse('SALAH ❌', false));
+        document.getElementById('tebak-resp-bisajadi').addEventListener('click', () => handleResponse('BISA JADI 🤔', false));
+
+        document.getElementById('tebak-quit-btn').addEventListener('click', () => {
+            if(tebakId) updateDoc(doc(db, "tebak_games", tebakId), { status: 'quit' });
+            document.getElementById('tebak-area').classList.add('hidden'); document.getElementById('tebak-area').classList.remove('flex');
+            switchTab('game');
+        });
+        document.getElementById('back-from-tebak-btn').addEventListener('click', () => {
+            if(tebakId) updateDoc(doc(db, "tebak_games", tebakId), { status: 'quit' });
+            document.getElementById('tebak-area').classList.add('hidden'); document.getElementById('tebak-area').classList.remove('flex');
+            switchTab('game');
+        });
+
+        document.getElementById('open-edit-modal-btn').addEventListener('click', () => document.getElementById('edit-modal').classList.remove('hidden'));
+        document.getElementById('close-modal-btn').addEventListener('click', () => document.getElementById('edit-modal').classList.add('hidden'));
+        document.getElementById('save-profile-btn').addEventListener('click', async () => {
+            const newName = document.getElementById('edit-username').value.trim();
+            if(!newName) return;
+            await updateDoc(doc(db, "users", currentUserDoc.uid), { username: newName });
+            document.getElementById('edit-modal').classList.add('hidden');
+        });
+
+    </script>
+</body>
+</html>
