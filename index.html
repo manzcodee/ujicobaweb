@@ -1,0 +1,2572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="google-site-verification" content="GvyTGbIx3Zov0CXr0f1voJ2LJnac-ppCl62NStzdY3E" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ManzChat - Live Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            .pb-safe { padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
+            .pt-safe { padding-top: max(0.75rem, env(safe-area-inset-top)); }
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes fall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        .animate-slide-up { animation: slideUp 0.4s ease-out forwards; }
+        .animate-pop { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .animate-fall { animation: fall linear forwards; }
+        .chat-bubble-me { border-bottom-right-radius: 4px; }
+        .chat-bubble-other { border-bottom-left-radius: 4px; }
+    </style>
+</head>
+<body class="flex items-center justify-center fixed inset-0 bg-gray-100 text-gray-800 font-sans overflow-hidden w-full h-full">
+    
+    <!-- Notification Bar -->
+    <div id="notification-bar" class="fixed top-4 md:top-6 left-1/2 transform -translate-x-1/2 bg-white border-l-4 border-indigo-600 text-gray-800 px-4 py-3 rounded-xl shadow-2xl z-[100] flex items-center gap-3 transition-transform duration-300 translate-y-[-150%] cursor-pointer min-w-[300px] max-w-[90%]">
+        <img id="notif-avatar" src="" class="w-10 h-10 rounded-full object-cover shadow-sm border border-gray-100">
+        <div class="flex flex-col overflow-hidden flex-1">
+            <span id="notif-title" class="font-bold text-sm truncate text-gray-800"></span>
+            <span id="notif-desc" class="text-xs text-gray-500 truncate mt-0.5"></span>
+        </div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-300">
+        <div class="flex flex-col items-center animate-slide-up">
+            <div class="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent mb-4 shadow-lg"></div>
+            <p class="text-indigo-600 font-bold tracking-wide">Loading ManzChat...</p>
+        </div>
+    </div>
+
+    <!-- Container -->
+    <div class="w-full h-full bg-white overflow-hidden flex border-none relative animate-fade-in">
+        
+        <!-- Join Screen -->
+        <div id="join-screen" class="hidden flex-col items-center justify-center w-full h-full p-6 sm:p-8 text-center bg-white absolute inset-0 z-40">
+            <div class="w-24 h-24 sm:w-28 sm:h-28 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mb-6 shadow-xl animate-slide-up">
+                <svg class="w-12 h-12 sm:w-14 sm:h-14 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+            </div>
+            <h2 class="text-4xl sm:text-5xl font-extrabold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 animate-slide-up" style="animation-delay: 0.1s">ManzChat</h2>
+            <p class="text-gray-500 mb-10 text-base sm:text-lg max-w-sm mx-auto animate-slide-up" style="animation-delay: 0.2s">Connect with friends and play games.</p>
+            
+            <div class="w-full max-w-sm space-y-4 text-left animate-slide-up" style="animation-delay: 0.3s">
+                <button id="google-login-btn" class="w-full bg-white border-2 border-gray-200 hover:border-indigo-100 hover:bg-indigo-50 active:scale-95 text-gray-700 font-bold py-3.5 px-4 rounded-2xl transition-all duration-200 shadow-sm flex items-center justify-center gap-3">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Continue with Google
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Dashboard & Chat Screen -->
+        <div id="main-screen" class="hidden w-full h-full flex-col md:flex-row relative bg-white">
+            
+            <!-- Sidebar -->
+            <div id="sidebar" class="w-full md:w-[320px] lg:w-[380px] bg-gray-50/80 backdrop-blur-md md:border-r border-gray-200 flex flex-col h-full absolute md:relative z-20 transition-transform duration-300 shadow-lg md:shadow-none">
+                <!-- Branding -->
+                <div class="p-5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white flex justify-between items-center shadow-md z-10 pt-safe shrink-0">
+                    <h1 class="text-2xl font-extrabold tracking-tight flex items-center gap-2">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                        ManzChat
+                    </h1>
+                    <button id="leave-btn" class="bg-white/20 hover:bg-white/30 rounded-full transition p-2 backdrop-blur-sm" title="Sign Out">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    </button>
+                </div>
+
+                <!-- User Profile -->
+                <div class="p-4 bg-white border-b border-gray-100 flex items-center justify-between shadow-sm relative z-10 shrink-0">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <div class="relative">
+                            <img id="my-avatar" src="" class="w-12 h-12 rounded-full object-cover border-2 border-indigo-100 shadow-sm flex-shrink-0">
+                            <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                        </div>
+                        <div class="flex flex-col truncate">
+                            <span id="my-username" class="font-bold text-gray-800 truncate text-base"></span>
+                            <div class="flex items-center gap-2 mt-0.5">
+                                <span id="my-status" class="text-[11px] text-green-500 font-semibold">Online</span>
+                                <span class="text-[11px] text-gray-300">|</span>
+                                <span id="my-points" class="text-[11px] text-yellow-500 font-bold flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg> 
+                                    <span id="my-points-val">0</span> Pts
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="open-edit-modal-btn" class="text-gray-400 hover:text-indigo-600 transition p-2.5 bg-gray-50 hover:bg-indigo-50 rounded-full flex-shrink-0 border border-gray-100 shadow-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
+                    </button>
+                </div>
+
+                <!-- Tabs -->
+                <div class="flex bg-white border-b border-gray-200 shadow-sm relative z-10 shrink-0">
+                    <button id="tab-private" class="flex-1 py-3.5 text-sm font-bold text-indigo-600 border-b-[3px] border-indigo-600 transition flex items-center justify-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                        Private
+                    </button>
+                    <button id="tab-public" class="flex-1 py-3.5 text-sm font-bold text-gray-500 border-b-[3px] border-transparent hover:text-indigo-500 hover:bg-gray-50 transition flex items-center justify-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        Public
+                    </button>
+                    <button id="tab-game" class="flex-1 py-3.5 text-sm font-bold text-gray-500 border-b-[3px] border-transparent hover:text-indigo-500 hover:bg-gray-50 transition flex items-center justify-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Game
+                    </button>
+                </div>
+
+                <!-- Tab Content: Private Chats -->
+                <div id="panel-private" class="flex-1 flex flex-col min-h-0 overflow-hidden bg-white">
+                    <div class="p-3 border-b border-gray-100 bg-gray-50/50 shrink-0">
+                        <div class="flex gap-2 relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </div>
+                            <input id="friend-username-input" type="text" placeholder="Add friend by username..." class="flex-1 pl-9 pr-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm transition">
+                            <button id="add-friend-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition shadow-sm active:scale-95">Add</button>
+                        </div>
+                    </div>
+                    
+                    <div class="px-3 py-2 bg-gray-50 flex justify-between items-center border-b border-gray-100 shrink-0">
+                        <span id="chat-list-title" class="text-xs font-bold text-gray-500 uppercase tracking-wider">Active Chats</span>
+                        <button id="toggle-archive-btn" class="text-xs text-indigo-600 font-bold hover:text-indigo-800 transition flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                            Archived (0)
+                        </button>
+                    </div>
+
+                    <div class="flex-1 min-h-0 overflow-y-auto p-2 pb-safe md:pb-2">
+                        <div id="friends-list" class="space-y-1"></div>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Public Zone -->
+                <div id="panel-public" class="hidden flex-1 flex-col min-h-0 overflow-y-auto bg-white p-4 items-center justify-center space-y-3">
+                    <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-500 mb-1 shadow-sm">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800">Public Zone</h3>
+                    <p class="text-gray-500 text-sm text-center max-w-xs mb-2">Pilih mode chat publik kesukaanmu.</p>
+                    
+                    <button id="btn-global-chat" class="w-full max-w-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-sm">Chat Bebas (Global)</button>
+                    
+                    <div class="w-full max-w-xs mt-2 pt-4 border-t border-gray-100 flex flex-col items-center space-y-3">
+                        <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider">Chat Acak</h4>
+                        <select id="random-chat-pref" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 font-bold text-gray-700">
+                            <option value="Bebas">Bebas (Cowok/Cewek)</option>
+                            <option value="Cowok">Cari Cowok</option>
+                            <option value="Cewek">Cari Cewek</option>
+                        </select>
+                        <button id="btn-random-chat" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-sm">Mulai Chat Acak</button>
+                        <p id="random-chat-status" class="text-sm text-purple-500 font-semibold h-4"></p>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Game -->
+                <div id="panel-game" class="hidden flex-1 flex-col min-h-0 overflow-y-auto bg-white p-4 items-center justify-start space-y-4 pb-safe">
+                    <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-500 shadow-sm shrink-0 mt-2">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 shrink-0">Games Area</h3>
+                    
+                    <!-- Tic Tac Toe Section -->
+                    <div class="w-full max-w-xs bg-gray-50 border border-gray-100 rounded-2xl p-4 flex flex-col items-center space-y-3 shadow-sm shrink-0">
+                        <h4 class="font-extrabold text-gray-700 text-lg">Tic Tac Toe</h4>
+                        <button id="play-bot-btn" class="w-full bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 font-bold py-2.5 px-4 rounded-xl transition shadow-sm">Play vs Bot</button>
+                        <button id="find-match-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl transition shadow-sm">Find Online Match</button>
+                        <p id="match-status" class="text-xs text-indigo-500 font-semibold h-4"></p>
+
+                        <div class="w-full pt-3 border-t border-gray-200 flex flex-col items-center space-y-3">
+                            <h5 class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Play with Friend</h5>
+                            <button id="create-room-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 px-4 rounded-xl transition shadow-sm">Create Room</button>
+                            <div class="flex w-full gap-2">
+                                <input id="room-code-input" type="text" placeholder="Room Code" class="flex-1 px-3 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 uppercase text-center font-bold text-gray-700 text-sm">
+                                <button id="join-room-btn" class="bg-purple-100 text-purple-700 hover:bg-purple-200 font-bold py-2.5 px-4 rounded-xl transition shadow-sm text-sm">Join</button>
+                            </div>
+                            <p id="room-status" class="text-xs text-purple-500 font-semibold h-4"></p>
+                        </div>
+                    </div>
+
+                    <!-- Tebak Kata Section -->
+                    <div class="w-full max-w-xs bg-gray-50 border border-gray-100 rounded-2xl p-4 flex flex-col items-center space-y-3 shadow-sm shrink-0 mb-4 relative">
+                        <button id="tk-guide-btn" class="absolute top-3 right-3 text-indigo-500 hover:text-indigo-700 transition font-bold text-xs bg-indigo-100 px-2 py-1 rounded-md">Panduan</button>
+                        <h4 class="font-extrabold text-gray-700 text-lg">Tebak Kata</h4>
+                        <p class="text-[11px] text-gray-500 text-center mb-1">Adu ketangkasan menebak kata secara online.</p>
+                        <button id="find-word-match-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl transition shadow-sm">Find Online</button>
+                        <p id="word-match-status" class="text-xs text-indigo-500 font-semibold h-4"></p>
+
+                        <div class="w-full pt-3 border-t border-gray-200 flex flex-col items-center space-y-3">
+                            <h5 class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Main Bareng Teman</h5>
+                            <button id="create-word-room-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 px-4 rounded-xl transition shadow-sm">Buat Room</button>
+                            <div class="flex w-full gap-2">
+                                <input id="word-room-code-input" type="text" placeholder="Masukkan Kode" class="flex-1 px-3 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 uppercase text-center font-bold text-gray-700 text-sm">
+                                <button id="join-word-room-btn" class="bg-purple-100 text-purple-700 hover:bg-purple-200 font-bold py-2.5 px-4 rounded-xl transition shadow-sm text-sm">Join</button>
+                            </div>
+                            <p id="word-room-status" class="text-xs text-purple-500 font-semibold h-4"></p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            
+            <!-- Chat / Game Area -->
+            <div id="main-content-area" class="hidden md:flex flex-1 flex-col h-full overflow-hidden absolute md:relative inset-0 md:inset-auto z-30 md:z-10 animate-fade-in w-full bg-gray-50">
+                
+                <!-- Chat Header -->
+                <div id="chat-header" class="bg-white px-4 py-3 md:px-6 md:py-4 flex items-center justify-between shadow-sm border-b border-gray-200 z-20 hidden pt-safe shrink-0">
+                    <div class="flex items-center gap-3 md:gap-4">
+                        <button id="back-to-sidebar-btn" class="md:hidden p-2 -ml-2 text-gray-500 hover:text-indigo-600 transition rounded-full hover:bg-gray-100 active:bg-gray-200">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <div id="chat-user-profile" class="flex items-center gap-3 cursor-pointer p-1.5 -ml-1.5 rounded-xl hover:bg-gray-100 transition">
+                            <div class="relative">
+                                <img id="chat-avatar" src="" class="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover shadow-sm border border-gray-100">
+                            </div>
+                            <div class="flex flex-col">
+                                <div class="flex items-center gap-2">
+                                    <h2 id="chat-display-name" class="font-bold text-gray-800 text-base md:text-lg leading-tight"></h2>
+                                    <span id="chat-original-name" class="opacity-50 text-sm font-normal hidden"></span>
+                                    <button id="edit-nickname-btn" class="text-gray-400 hover:text-indigo-600 transition p-1 rounded-full hover:bg-gray-200" title="Set Nickname">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                    </button>
+                                </div>
+                                <p id="chat-status" class="text-xs text-gray-500 font-medium mt-0.5"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button id="love-btn" class="hidden text-2xl hover:scale-110 transition active:scale-95" title="Send Love">❤️</button>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="no-chat-header" class="absolute inset-0 flex-col items-center justify-center bg-gray-50/80 z-40 hidden animate-fade-in">
+                    <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-6 shadow-md text-indigo-300">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-700 mb-2">Welcome to ManzChat</h2>
+                    <p class="text-gray-500 text-center max-w-xs">Select a friend to start chatting or play a game.</p>
+                </div>
+                
+                <!-- Messages Area -->
+                <div id="messages" class="flex-1 min-h-0 overflow-y-auto p-4 md:p-6 space-y-5 bg-[#E5DDD5] hidden relative z-10" style="background-image: url('https://www.transparenttextures.com/patterns/cubes.png');"></div>
+                
+                <!-- Input Area -->
+                <div id="input-area" class="bg-white p-3 md:p-4 border-t border-gray-200 flex items-center gap-2 md:gap-3 pb-safe z-20 hidden shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] shrink-0 w-full">
+                    <button class="p-2 text-gray-400 hover:text-indigo-600 transition rounded-full hover:bg-gray-100 flex-shrink-0" title="Add attachment">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                    </button>
+                    <button id="share-loc-btn" class="p-2 text-gray-400 hover:text-blue-500 transition rounded-full hover:bg-gray-100 flex-shrink-0 text-xl" title="Share Live Location">
+                        📍
+                    </button>
+                    <div class="flex-1 relative flex items-center">
+                        <button class="absolute left-3 p-1.5 text-gray-400 hover:text-indigo-600 transition rounded-full hover:bg-gray-200 z-10" title="Add emoji">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </button>
+                        <input id="message-input" type="text" class="w-full pl-11 pr-4 py-3 bg-gray-100 border border-transparent rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-gray-800 text-sm md:text-base transition shadow-sm" placeholder="Type a message...">
+                    </div>
+                    <button id="send-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full w-12 h-12 flex items-center justify-center transition duration-200 shadow-md flex-shrink-0 active:scale-95 group">
+                        <svg class="w-5 h-5 transform group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                    </button>
+                </div>
+
+                <!-- Game Area -->
+                <div id="game-area" class="hidden flex-1 flex-col h-full bg-white z-20 absolute inset-0 w-full">
+                    <!-- Game Header -->
+                    <div class="bg-white px-4 py-3 md:px-6 md:py-4 flex items-center justify-between shadow-sm border-b border-gray-200 shrink-0 pt-safe">
+                       <div class="flex items-center gap-3">
+                           <button id="back-from-game-btn" class="md:hidden p-2 -ml-2 text-gray-500 hover:text-indigo-600 transition rounded-full hover:bg-gray-100">
+                               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                           </button>
+                           <img id="game-opponent-avatar" src="" class="w-10 h-10 rounded-full object-cover shadow-sm border border-gray-100">
+                           <div>
+                               <h2 id="game-opponent-username" class="font-bold text-gray-800 text-base leading-tight"></h2>
+                               <p id="game-opponent-status" class="text-xs text-indigo-500 font-medium mt-0.5">Playing...</p>
+                           </div>
+                       </div>
+                       <div class="flex gap-2">
+                           <button id="game-add-friend-btn" class="hidden bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-1.5 rounded-lg text-sm font-bold transition">Add Friend</button>
+                           <button id="game-quit-btn" class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg text-sm font-bold transition">Quit</button>
+                       </div>
+                    </div>
+                    
+                    <!-- Game Board & Chat -->
+                    <div class="flex-1 flex flex-col items-center justify-start overflow-y-auto bg-gray-50 p-4 pb-safe w-full">
+                        <div id="game-score-display" class="text-lg font-bold text-gray-600 mb-2">
+                            Score - You: <span id="my-score" class="text-indigo-600">0</span> | Opponent: <span id="opp-score" class="text-red-500">0</span>
+                        </div>
+                        <h3 id="game-status-text" class="text-2xl sm:text-3xl font-extrabold mb-6 text-gray-800">Your Turn (X)</h3>
+                        
+                        <!-- Tic Tac Toe Board -->
+                        <div id="tictactoe-board" class="grid grid-cols-3 gap-2 sm:gap-3 bg-indigo-100 p-2 sm:p-3 rounded-2xl shadow-inner shrink-0">
+                            <div class="ttt-cell w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-xl flex items-center justify-center text-5xl sm:text-6xl font-bold cursor-pointer hover:bg-gray-50 transition shadow-sm" data-index="0"></div>
+                            <div class="ttt-cell w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-xl flex items-center justify-center text-5xl sm:text-6xl font-bold cursor-pointer hover:bg-gray-50 transition shadow-sm" data-index="1"></div>
+                            <div class="ttt-cell w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-xl flex items-center justify-center text-5xl sm:text-6xl font-bold cursor-pointer hover:bg-gray-50 transition shadow-sm" data-index="2"></div>
+                            <div class="ttt-cell w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-xl flex items-center justify-center text-5xl sm:text-6xl font-bold cursor-pointer hover:bg-gray-50 transition shadow-sm" data-index="3"></div>
+                            <div class="ttt-cell w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-xl flex items-center justify-center text-5xl sm:text-6xl font-bold cursor-pointer hover:bg-gray-50 transition shadow-sm" data-index="4"></div>
+                            <div class="ttt-cell w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-xl flex items-center justify-center text-5xl sm:text-6xl font-bold cursor-pointer hover:bg-gray-50 transition shadow-sm" data-index="5"></div>
+                            <div class="ttt-cell w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-xl flex items-center justify-center text-5xl sm:text-6xl font-bold cursor-pointer hover:bg-gray-50 transition shadow-sm" data-index="6"></div>
+                            <div class="ttt-cell w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-xl flex items-center justify-center text-5xl sm:text-6xl font-bold cursor-pointer hover:bg-gray-50 transition shadow-sm" data-index="7"></div>
+                            <div class="ttt-cell w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-xl flex items-center justify-center text-5xl sm:text-6xl font-bold cursor-pointer hover:bg-gray-50 transition shadow-sm" data-index="8"></div>
+                        </div>
+
+                        <!-- Tebak Kata Board -->
+                        <div id="tebakkata-board" class="hidden w-full flex-col items-center shrink-0 w-full max-w-md">
+                            <!-- Input Word Phase -->
+                            <div id="tk-input-phase" class="w-full flex flex-col items-center bg-indigo-50 p-4 rounded-2xl shadow-inner mb-4">
+                            </div>
+                            
+                            <!-- Playing Phase -->
+                            <div id="tk-playing-phase" class="w-full hidden flex-col gap-4">
+                                <!-- My Guesses -->
+                                <div class="w-full border border-indigo-100 rounded-xl p-3 bg-white flex flex-col shadow-sm relative">
+                                    <h4 class="font-bold text-sm mb-2 text-indigo-700 text-center">Tebakanmu</h4>
+                                    <div id="tk-my-guesses" class="flex-1 overflow-y-auto mb-2 space-y-1 h-32 bg-gray-50 p-2 rounded-lg border border-gray-100"></div>
+                                    <div class="flex gap-2">
+                                        <input id="tk-guess-input" type="text" class="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Tebak kata...">
+                                        <button id="tk-send-guess-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl font-bold text-sm transition">Tebak</button>
+                                    </div>
+                                    <button id="tk-sudah-yakin-btn" class="mt-2 w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl font-bold text-sm transition shadow-sm hidden">Sudah Yakin? Tebak Kata Rahasia Lawanmu</button>
+                                </div>
+                                
+                                <!-- Opponent's Guesses -->
+                                <div class="w-full border border-purple-100 rounded-xl p-3 bg-white flex flex-col shadow-sm">
+                                    <h4 class="font-bold text-sm mb-2 text-purple-700 text-center">Lawan Menebak: <span id="tk-my-secret-word" class="text-gray-800 bg-purple-100 px-2 py-0.5 rounded"></span></h4>
+                                    <div id="tk-opp-guesses" class="flex-1 overflow-y-auto mb-2 space-y-1 h-32 bg-gray-50 p-2 rounded-lg border border-gray-100"></div>
+                                    <div id="tk-eval-actions" class="flex gap-2 hidden justify-center mt-1">
+                                        <button class="tk-eval-btn bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-bold transition shadow-sm" data-resp="Benar">Benar</button>
+                                        <button class="tk-eval-btn bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-sm font-bold transition shadow-sm" data-resp="Salah">Salah</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Final Phase / Tebak Lawan -->
+                            <div id="tk-final-phase" class="w-full hidden flex-col gap-4 mt-4 bg-indigo-50 p-4 rounded-xl shadow-inner text-center">
+                            </div>
+                        </div>
+
+                        <!-- Game Chat Container -->
+                        <div id="game-chat-container" class="w-full max-w-md mt-6 flex-col h-48 border border-gray-200 rounded-2xl overflow-hidden bg-white hidden shadow-sm shrink-0">
+                            <div id="game-messages" class="flex-1 overflow-y-auto p-3 space-y-2 text-sm bg-gray-50 flex flex-col"></div>
+                            <div class="flex border-t border-gray-200 bg-white p-2 gap-2">
+                                <input id="game-message-input" type="text" class="flex-1 px-3 py-2 bg-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Chat here...">
+                                <button id="game-send-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 rounded-xl font-bold text-sm transition active:scale-95">Send</button>
+                            </div>
+                        </div>
+
+                        <div id="game-actions" class="mt-6 flex flex-col items-center gap-3 hidden shrink-0">
+                            <button id="play-again-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-xl transition shadow-sm active:scale-95">Play Again</button>
+                            <p id="rematch-status" class="text-sm text-indigo-500 font-semibold h-4 hidden"></p>
+                            <div id="rematch-prompt" class="hidden flex flex-col items-center gap-3 bg-white p-4 rounded-xl shadow-md border border-indigo-100">
+                                <p id="rematch-text" class="text-sm text-indigo-700 font-bold">Lawan mu ingin mengajak mu bermain lagi</p>
+                                <div class="flex gap-3">
+                                    <button id="accept-rematch-btn" class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-lg font-bold transition">Terima</button>
+                                    <button id="decline-rematch-btn" class="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-lg font-bold transition">Tidak</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- User Options Modal -->
+    <div id="user-options-modal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-end md:items-center justify-center z-50 p-4 animate-fade-in">
+        <div class="bg-white rounded-t-3xl md:rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-slide-up flex flex-col gap-3">
+            <div class="flex items-center justify-center mb-2 md:hidden">
+                <div class="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+            </div>
+            <div class="flex items-center gap-4 mb-4 border-b pb-4">
+                <img id="options-avatar" src="" class="w-16 h-16 rounded-full object-cover shadow-sm">
+                <div>
+                    <h3 id="options-name" class="text-xl font-bold text-gray-800 leading-tight"></h3>
+                    <p id="options-username" class="text-sm text-gray-500"></p>
+                </div>
+            </div>
+            <button id="modal-partner-btn" class="w-full py-3.5 rounded-xl font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition"></button>
+            <button id="modal-pin-btn" class="w-full py-3.5 rounded-xl font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition"></button>
+            <button id="modal-archive-btn" class="w-full py-3.5 rounded-xl font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition"></button>
+            <button id="close-options-modal-btn" class="w-full py-3.5 mt-2 rounded-xl font-bold text-red-500 bg-red-50 hover:bg-red-100 transition">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div id="edit-modal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl p-6 md:p-8 w-full max-w-sm shadow-2xl animate-slide-up">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Edit Profile</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Username</label>
+                    <input id="edit-username" type="text" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition font-medium">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Bio</label>
+                    <input id="edit-bio" type="text" placeholder="Tell us about yourself" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition font-medium text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Jenis Kelamin</label>
+                    <select id="edit-gender" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition font-medium text-sm">
+                        <option value="">Pilih...</option>
+                        <option value="Cowok">Cowok</option>
+                        <option value="Cewek">Cewek</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button id="close-modal-btn" class="px-5 py-2.5 text-gray-600 font-bold hover:bg-gray-100 rounded-xl transition">Cancel</button>
+                    <button id="save-profile-btn" class="px-5 py-2.5 bg-indigo-600 font-bold text-white rounded-xl hover:bg-indigo-700 shadow-md transition flex items-center justify-center min-w-[100px] active:scale-95">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nickname Modal -->
+    <div id="nickname-modal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl p-6 md:p-8 w-full max-w-sm shadow-2xl animate-slide-up">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Set Nickname</h2>
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Nickname</label>
+                    <input id="edit-nickname" type="text" placeholder="Leave blank to restore original" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition font-medium">
+                </div>
+                <div class="flex justify-end gap-3 mt-8">
+                    <button id="close-nickname-modal-btn" class="px-5 py-2.5 text-gray-600 font-bold hover:bg-gray-100 rounded-xl transition">Cancel</button>
+                    <button id="remove-nickname-btn" class="px-5 py-2.5 bg-red-100 text-red-600 font-bold hover:bg-red-200 rounded-xl transition">Restore</button>
+                    <button id="save-nickname-btn" class="px-5 py-2.5 bg-indigo-600 font-bold text-white rounded-xl hover:bg-indigo-700 shadow-md transition flex items-center justify-center min-w-[100px] active:scale-95">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Location Map Modal -->
+    <div id="location-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+        <div class="bg-white rounded-2xl w-full max-w-2xl h-[70vh] flex flex-col shadow-2xl animate-slide-up overflow-hidden">
+            <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                <h3 class="font-bold text-gray-800 flex items-center gap-2">📍 Live Location</h3>
+                <button onclick="closeLocationModal()" class="text-gray-500 hover:bg-gray-200 p-2 rounded-full transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <iframe id="location-iframe" class="flex-1 w-full border-0 bg-gray-100" src=""></iframe>
+        </div>
+    </div>
+
+    <!-- Logout Modal -->
+    <div id="logout-modal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl p-6 md:p-8 w-full max-w-sm shadow-2xl animate-slide-up flex flex-col gap-3">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">Keluar Akun</h2>
+            <button id="delete-account-btn" class="w-full py-3.5 rounded-xl font-bold text-white bg-red-600 hover:bg-red-700 transition">Hapus Akun</button>
+            <button id="logout-account-btn" class="w-full py-3.5 rounded-xl font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition">Keluar Akun</button>
+            <button id="cancel-logout-btn" class="w-full py-3.5 mt-2 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition">Cancel</button>
+        </div>
+    </div>
+
+    <!-- TK Guide Modal -->
+    <div id="tk-guide-modal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl p-6 md:p-8 w-full max-w-md shadow-2xl animate-slide-up overflow-y-auto max-h-[90vh]">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Panduan Bermain Tebak Kata</h2>
+            <div class="space-y-3 text-sm text-gray-700">
+                <p><strong>Cara Bermain:</strong> Setiap pemain akan memasukkan sebuah kata rahasia. Kalian akan saling bergantian menebak kata rahasia lawan. Jika tebakanmu benar, lawan akan memilih "Benar".</p>
+                <p><strong>Aturan Menang dan Kalah:</strong> Kemenangan tidak didapat hanya dari tebakan biasa. Kemenangan HANYA berlaku jika kamu menggunakan tombol khusus <em>"Tebak Kata Lawan"</em> atau <em>"Sudah Yakin? Tebak Kata Rahasia Lawanmu"</em>.</p>
+                <p><strong>Fungsi Tombol:</strong></p>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li><strong>Tebak:</strong> Untuk mengirim tebakan biasa.</li>
+                    <li><strong>Benar / Salah:</strong> Untuk merespon tebakan lawan.</li>
+                    <li><strong>Tebak Kata Lawan:</strong> Muncul saat tebakan biasamu dibenarkan lawan. Klik tombol ini untuk mencoba menebak kata rahasia lawan untuk menang.</li>
+                    <li><strong>Sudah Yakin? Tebak Kata Rahasia Lawanmu:</strong> Tombol khusus untuk langsung menebak kata rahasia lawan.</li>
+                </ul>
+                <p><strong>Batas Penggunaan:</strong> Tombol khusus <em>Tebak Kata Lawan</em> hanya boleh digunakan maksimal 2 kali dalam satu permainan.</p>
+            </div>
+            <button id="close-tk-guide-btn" class="w-full mt-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition">Tutup</button>
+        </div>
+    </div>
+
+    <!-- TK Sudah Yakin Modal -->
+    <div id="tk-sudah-yakin-modal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-slide-up">
+            <h2 class="text-lg font-bold text-gray-800 mb-4">Tebak Kata Rahasia Lawanmu</h2>
+            <input id="tk-sudah-yakin-input" type="text" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Masukkan kata...">
+            <div class="flex gap-3">
+                <button id="cancel-sudah-yakin-btn" class="flex-1 py-2.5 text-gray-600 font-bold hover:bg-gray-100 rounded-xl transition">Batal</button>
+                <button id="send-sudah-yakin-btn" class="flex-1 py-2.5 bg-indigo-600 text-white font-bold rounded-xl transition shadow-sm hover:bg-indigo-700">Kirim</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, deleteUser } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, setDoc, getDoc, updateDoc, where, getDocs, limit, deleteDoc, increment } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDG3Etn46FE_79QQZuFnUJpY_fExfagSJc",
+            authDomain: "webchatmanzcode.firebaseapp.com",
+            projectId: "webchatmanzcode",
+            storageBucket: "webchatmanzcode.firebasestorage.app",
+            messagingSenderId: "449247016674",
+            appId: "1:449247016674:web:fb7a3d2710dc2c7f0c50bb"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        let currentUserDoc = null;
+        let currentMode = 'private'; 
+        let currentChatFriend = null;
+        let messagesUnsubscribe = null;
+        let friendsUnsubscribe = null;
+        let publicUnsubscribe = null;
+        let currentUserUnsubscribe = null;
+        window.activeChatUnsubscribe = null;
+        window.randomChatUnsubscribe = null;
+        window.randomQueueUnsubscribe = null;
+        window.currentRandomChatId = null;
+
+        // Elements
+        const loadingScreen = document.getElementById('loading-screen');
+        const joinScreen = document.getElementById('join-screen');
+        const mainScreen = document.getElementById('main-screen');
+        const chatHeader = document.getElementById('chat-header');
+        const noChatHeader = document.getElementById('no-chat-header');
+        const messagesDiv = document.getElementById('messages');
+        const inputArea = document.getElementById('input-area');
+        const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        const friendsList = document.getElementById('friends-list');
+        const panelPrivate = document.getElementById('panel-private');
+        const panelPublic = document.getElementById('panel-public');
+        const sidebar = document.getElementById('sidebar');
+        const mainContentArea = document.getElementById('main-content-area');
+        
+        async function setOnlineStatus(isOnline) {
+            if(currentUserDoc) {
+                try {
+                    await updateDoc(doc(db, "users", currentUserDoc.uid), {
+                        isOnline: isOnline,
+                        lastSeen: serverTimestamp()
+                    });
+                } catch(e){}
+            }
+        }
+        
+        async function updateBatteryStatus() {
+            if (navigator.getBattery && currentUserDoc) {
+                try {
+                    const battery = await navigator.getBattery();
+                    await updateDoc(doc(db, "users", currentUserDoc.uid), {
+                        battery: Math.round(battery.level * 100),
+                        isCharging: battery.charging
+                    });
+                    battery.onlevelchange = async () => {
+                        if(currentUserDoc) await updateDoc(doc(db, "users", currentUserDoc.uid), { battery: Math.round(battery.level * 100) });
+                    };
+                    battery.onchargingchange = async () => {
+                        if(currentUserDoc) await updateDoc(doc(db, "users", currentUserDoc.uid), { isCharging: battery.charging });
+                    };
+                } catch(e) {}
+            }
+        }
+
+        window.addEventListener('beforeunload', () => {
+            setOnlineStatus(false);
+            if(!isBotGame && currentGameId) {
+                updateDoc(doc(db, "tictactoe_games", currentGameId), { status: 'quit' }).catch(()=>{});
+            }
+            if(queueUnsubscribe && currentUserDoc) {
+                deleteDoc(doc(db, "tictactoe_queue", currentUserDoc.uid)).catch(()=>{});
+            }
+            if(currentUserDoc) {
+                deleteDoc(doc(db, "random_queue", currentUserDoc.uid)).catch(()=>{});
+            }
+            if(window.currentRandomChatId) {
+                updateDoc(doc(db, "random_chats", window.currentRandomChatId), { status: 'quit' }).catch(()=>{});
+            }
+            if(currentTKGameId) {
+                updateDoc(doc(db, "tebakkata_games", currentTKGameId), { status: 'quit' }).catch(()=>{});
+            }
+            if(window.tkQueueUnsubscribe && currentUserDoc) {
+                deleteDoc(doc(db, "tebakkata_queue", currentUserDoc.uid)).catch(()=>{});
+            }
+        });
+
+        onAuthStateChanged(auth, async (user) => {
+            loadingScreen.classList.add('hidden');
+            if (user) {
+                const userRef = doc(db, "users", user.uid);
+                const userSnap = await getDoc(userRef);
+                
+                if (!userSnap.exists()) {
+                    const generatedUsername = (user.displayName || 'User').replace(/\s+/g, '') + Math.floor(Math.random() * 1000);
+                    currentUserDoc = { uid: user.uid, username: generatedUsername, avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`, isOnline: true, partnerUid: null, bio: '', gender: '', points: 0 };
+                    await setDoc(userRef, currentUserDoc);
+                } else {
+                    currentUserDoc = userSnap.data();
+                    if(!currentUserDoc.gender) currentUserDoc.gender = '';
+                    if(!currentUserDoc.bio) currentUserDoc.bio = '';
+                    if(currentUserDoc.points === undefined) currentUserDoc.points = 0;
+                    await setOnlineStatus(true);
+                }
+
+                if(currentUserUnsubscribe) currentUserUnsubscribe();
+                currentUserUnsubscribe = onSnapshot(userRef, (docSnap) => {
+                    if(docSnap.exists()) {
+                        currentUserDoc = docSnap.data();
+                        document.getElementById('my-points-val').innerText = currentUserDoc.points || 0;
+                    }
+                });
+                
+                updateBatteryStatus();
+
+                document.getElementById('my-avatar').src = currentUserDoc.avatar;
+                document.getElementById('my-username').innerText = currentUserDoc.username;
+                document.getElementById('edit-username').value = currentUserDoc.username;
+                document.getElementById('edit-bio').value = currentUserDoc.bio || '';
+                document.getElementById('edit-gender').value = currentUserDoc.gender || '';
+                document.getElementById('my-points-val').innerText = currentUserDoc.points || 0;
+                
+                joinScreen.classList.add('hidden');
+                mainScreen.classList.remove('hidden');
+                mainScreen.classList.add('flex');
+                
+                loadFriends();
+                switchTab('private');
+            } else {
+                if(currentUserDoc) setOnlineStatus(false);
+                if(currentUserUnsubscribe) { currentUserUnsubscribe(); currentUserUnsubscribe = null; }
+                joinScreen.classList.remove('hidden');
+                joinScreen.classList.add('flex');
+                mainScreen.classList.add('hidden');
+                mainScreen.classList.remove('flex');
+                currentUserDoc = null;
+            }
+        });
+
+        document.getElementById('google-login-btn').addEventListener('click', () => signInWithPopup(auth, provider));
+        
+        // Logout Handling
+        document.getElementById('leave-btn').addEventListener('click', () => {
+            document.getElementById('logout-modal').classList.remove('hidden');
+        });
+        document.getElementById('cancel-logout-btn').addEventListener('click', () => {
+            document.getElementById('logout-modal').classList.add('hidden');
+        });
+        document.getElementById('logout-account-btn').addEventListener('click', () => {
+            document.getElementById('logout-modal').classList.add('hidden');
+            signOut(auth);
+        });
+        document.getElementById('delete-account-btn').addEventListener('click', async () => {
+            if(confirm("Apakah Anda yakin ingin menghapus akun beserta seluruh data?")) {
+                try {
+                    const user = auth.currentUser;
+                    if(user) {
+                        await deleteDoc(doc(db, "users", user.uid));
+                        await deleteUser(user);
+                    }
+                    document.getElementById('logout-modal').classList.add('hidden');
+                } catch(e) {
+                    alert("Gagal menghapus akun. Silakan login kembali lalu coba lagi.");
+                }
+            }
+        });
+
+        // TK Guide
+        document.getElementById('tk-guide-btn').addEventListener('click', () => {
+            document.getElementById('tk-guide-modal').classList.remove('hidden');
+        });
+        document.getElementById('close-tk-guide-btn').addEventListener('click', () => {
+            document.getElementById('tk-guide-modal').classList.add('hidden');
+        });
+
+        function switchTab(mode) {
+            if(currentMode !== 'game' && gameActive && !isBotGame && currentGameId) {
+                updateDoc(doc(db, "tictactoe_games", currentGameId), { status: 'quit' });
+                quitGame();
+            }
+            if(currentMode !== 'game' && isTKGame && currentTKGameId) {
+                updateDoc(doc(db, "tebakkata_games", currentTKGameId), { status: 'quit' });
+                quitGame();
+            }
+            if(currentMode === 'random' && window.currentRandomChatId) {
+                updateDoc(doc(db, "random_chats", window.currentRandomChatId), { status: 'quit' });
+                window.currentRandomChatId = null;
+            }
+
+            if(window.activeChatUnsubscribe) {
+                window.activeChatUnsubscribe();
+                window.activeChatUnsubscribe = null;
+            }
+
+            currentMode = mode;
+            ['private', 'public', 'game'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.remove('text-indigo-600', 'border-indigo-600', 'bg-indigo-50/50');
+                document.getElementById(`tab-${t}`).classList.add('text-gray-500', 'border-transparent');
+            });
+            
+            document.getElementById(`tab-${mode}`).classList.remove('text-gray-500', 'border-transparent');
+            document.getElementById(`tab-${mode}`).classList.add('text-indigo-600', 'border-indigo-600', 'bg-indigo-50/50');
+            
+            chatHeader.classList.add('hidden');
+            noChatHeader.classList.add('hidden');
+            noChatHeader.classList.remove('flex');
+            messagesDiv.classList.add('hidden');
+            inputArea.classList.add('hidden');
+            panelPrivate.classList.add('hidden');
+            panelPublic.classList.add('hidden');
+            document.getElementById('panel-game').classList.add('hidden');
+            document.getElementById('game-area').classList.add('hidden');
+            document.getElementById('game-area').classList.remove('flex');
+
+            if(messagesUnsubscribe) messagesUnsubscribe();
+            if(publicUnsubscribe) publicUnsubscribe();
+            if(window.randomChatUnsubscribe) window.randomChatUnsubscribe();
+            
+            if (mode === 'private') {
+                panelPrivate.classList.remove('hidden');
+                panelPrivate.classList.add('flex');
+                
+                if (window.innerWidth < 768) {
+                    sidebar.classList.remove('hidden');
+                    mainContentArea.classList.add('hidden');
+                    mainContentArea.classList.remove('flex');
+                } else {
+                    noChatHeader.classList.remove('hidden');
+                    noChatHeader.classList.add('flex');
+                    mainContentArea.classList.remove('hidden');
+                    mainContentArea.classList.add('flex');
+                }
+            } else if (mode === 'public') {
+                panelPublic.classList.remove('hidden');
+                panelPublic.classList.add('flex');
+                
+                if (window.innerWidth < 768) {
+                    sidebar.classList.remove('hidden');
+                    mainContentArea.classList.add('hidden');
+                    mainContentArea.classList.remove('flex');
+                } else {
+                    noChatHeader.classList.remove('hidden');
+                    noChatHeader.classList.add('flex');
+                    mainContentArea.classList.remove('hidden');
+                    mainContentArea.classList.add('flex');
+                }
+            } else if (mode === 'game') {
+                document.getElementById('panel-game').classList.remove('hidden');
+                document.getElementById('panel-game').classList.add('flex');
+                if (window.innerWidth < 768) {
+                    sidebar.classList.remove('hidden');
+                    mainContentArea.classList.add('hidden');
+                    mainContentArea.classList.remove('flex');
+                } else {
+                    noChatHeader.classList.remove('hidden');
+                    noChatHeader.classList.add('flex');
+                    mainContentArea.classList.remove('hidden');
+                    mainContentArea.classList.add('flex');
+                }
+            }
+        }
+
+        document.getElementById('tab-private').addEventListener('click', () => switchTab('private'));
+        document.getElementById('tab-public').addEventListener('click', () => switchTab('public'));
+        document.getElementById('tab-game').addEventListener('click', () => switchTab('game'));
+        
+        function handleBackToSidebar() {
+            sidebar.classList.remove('hidden');
+            mainContentArea.classList.add('hidden');
+            mainContentArea.classList.remove('flex');
+            if (currentMode !== 'private' && currentMode !== 'game' && currentMode !== 'public') {
+                switchTab('private');
+            }
+        }
+
+        document.getElementById('back-to-sidebar-btn').addEventListener('click', handleBackToSidebar);
+
+        let friendDocUnsubscribes = {};
+        let notifTimeout;
+        let showArchived = false;
+        let currentFriendsSnapshot = null;
+
+        function showNotification(friendData, msgData) {
+            const bar = document.getElementById('notification-bar');
+            document.getElementById('notif-avatar').src = friendData.avatar;
+            document.getElementById('notif-title').innerText = friendData.nickname || friendData.username;
+            document.getElementById('notif-desc').innerText = msgData.type === 'love_trigger' ? 'Sent ❤️' : (msgData.type === 'live_location' ? '📍 Shared Location' : msgData.text);
+            
+            bar.classList.remove('translate-y-[-150%]');
+            bar.classList.add('translate-y-0');
+            
+            bar.onclick = () => {
+                bar.classList.add('translate-y-[-150%]');
+                bar.classList.remove('translate-y-0');
+                if(currentMode !== 'private') switchTab('private');
+                openPrivateChat(friendData);
+            };
+
+            clearTimeout(notifTimeout);
+            notifTimeout = setTimeout(() => {
+                bar.classList.add('translate-y-[-150%]');
+                bar.classList.remove('translate-y-0');
+            }, 4000);
+        }
+
+        function renderFriendsList() {
+            if(!currentFriendsSnapshot) return;
+            
+            Object.values(friendDocUnsubscribes).forEach(unsub => unsub());
+            friendDocUnsubscribes = {};
+            friendsList.innerHTML = '';
+            
+            if(currentFriendsSnapshot.empty) {
+                friendsList.innerHTML = `<div class="p-6 text-center text-gray-400 text-sm font-medium">No friends yet. Add someone!</div>`;
+                return;
+            }
+            
+            let relData = [];
+            currentFriendsSnapshot.forEach(d => relData.push(d.data()));
+            
+            const activeFriends = relData.filter(f => !f.isArchived);
+            const archivedFriends = relData.filter(f => f.isArchived);
+            
+            const toggleBtn = document.getElementById('toggle-archive-btn');
+            const title = document.getElementById('chat-list-title');
+            if(toggleBtn) {
+                if(showArchived) {
+                    toggleBtn.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> Back`;
+                    title.innerText = 'Archived Chats';
+                } else {
+                    toggleBtn.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg> Archived (${archivedFriends.length})`;
+                    title.innerText = 'Active Chats';
+                }
+            }
+            
+            let displayList = showArchived ? archivedFriends : activeFriends;
+            displayList.sort((a,b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0));
+
+            if(displayList.length === 0) {
+                friendsList.innerHTML = `<div class="p-6 text-center text-gray-400 text-sm font-medium">${showArchived ? 'No archived chats.' : 'No active chats.'}</div>`;
+                return;
+            }
+
+            displayList.forEach((friendRel) => {
+                const div = document.createElement('div');
+                div.className = "flex items-center gap-3 p-3 hover:bg-white rounded-xl cursor-pointer transition border border-transparent hover:border-gray-200 hover:shadow-sm mb-1";
+                div.id = `friend-item-${friendRel.uid}`;
+                friendsList.appendChild(div);
+
+                friendDocUnsubscribes[friendRel.uid] = onSnapshot(doc(db, "users", friendRel.uid), (userSnap) => {
+                    if(userSnap.exists()) {
+                        const friendData = userSnap.data();
+                        friendData.nickname = friendRel.nickname;
+                        friendData.isPinned = friendRel.isPinned;
+                        friendData.isArchived = friendRel.isArchived;
+                        
+                        let displayName = friendData.nickname || friendData.username;
+                        let originalNameHtml = friendData.nickname ? `<span class="opacity-50 text-xs font-normal ml-1">(${friendData.username})</span>` : '';
+                        
+                        div.innerHTML = `
+                            <div class="relative">
+                                <img src="${friendData.avatar}" class="w-12 h-12 rounded-full object-cover shadow-sm border border-gray-100">
+                                ${friendData.isOnline ? `<div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>` : ''}
+                            </div>
+                            <div class="flex flex-col flex-1 truncate">
+                                <span class="font-bold text-gray-800 text-sm truncate">${friendData.isPinned ? '📌 ' : ''}${displayName} ${originalNameHtml} ${currentUserDoc.partnerUid === friendData.uid ? '💖' : ''}</span>
+                                <span class="text-xs text-gray-500 truncate mt-0.5" id="last-msg-${friendData.uid}">Tap to chat...</span>
+                            </div>
+                        `;
+                        div.onclick = () => openPrivateChat(friendData);
+
+                        const chatId = currentUserDoc.uid < friendData.uid ? `${currentUserDoc.uid}_${friendData.uid}` : `${friendData.uid}_${currentUserDoc.uid}`;
+                        const msgQ = query(collection(db, "chats", chatId, "messages"), orderBy("timestamp", "desc"), limit(1));
+                        
+                        let isInitial = true;
+                        onSnapshot(msgQ, (msgSnap) => {
+                            if(!msgSnap.empty) {
+                                const msgData = msgSnap.docs[0].data();
+                                const msgEl = document.getElementById(`last-msg-${friendData.uid}`);
+                                if(msgEl) {
+                                    let txt = msgData.type === 'love_trigger' ? 'Sent ❤️' : (msgData.type === 'live_location' ? '📍 Shared Location' : msgData.text);
+                                    const prefix = msgData.senderId === currentUserDoc.uid ? 'You: ' : '';
+                                    msgEl.innerText = prefix + txt;
+                                    msgEl.classList.replace('text-gray-500', 'text-gray-600');
+                                }
+
+                                if (!isInitial && msgData.senderId !== currentUserDoc.uid && !msgData.isRead && (currentMode !== 'private' || currentChatFriend?.uid !== friendData.uid)) {
+                                    showNotification(friendData, msgData);
+                                }
+                            }
+                            isInitial = false;
+                        });
+                    }
+                });
+            });
+        }
+
+        function loadFriends() {
+            const q = query(collection(db, "users", currentUserDoc.uid, "friends"));
+            friendsUnsubscribe = onSnapshot(q, (snapshot) => {
+                currentFriendsSnapshot = snapshot;
+                renderFriendsList();
+            });
+        }
+
+        document.getElementById('toggle-archive-btn').addEventListener('click', () => {
+            showArchived = !showArchived;
+            renderFriendsList();
+        });
+
+        document.getElementById('add-friend-btn').addEventListener('click', async () => {
+            const username = document.getElementById('friend-username-input').value.trim();
+            if(!username || username === currentUserDoc.username) return;
+            
+            const btn = document.getElementById('add-friend-btn');
+            btn.disabled = true;
+            btn.innerText = '...';
+
+            const q = query(collection(db, "users"), where("username", "==", username));
+            const snap = await getDocs(q);
+            if(!snap.empty) {
+                const friendDoc = snap.docs[0].data();
+                await setDoc(doc(db, "users", currentUserDoc.uid, "friends", friendDoc.uid), { uid: friendDoc.uid, username: friendDoc.username, avatar: friendDoc.avatar, isPinned: false, isArchived: false });
+                await setDoc(doc(db, "users", friendDoc.uid, "friends", currentUserDoc.uid), { uid: currentUserDoc.uid, username: currentUserDoc.username, avatar: currentUserDoc.avatar, isPinned: false, isArchived: false });
+                document.getElementById('friend-username-input').value = '';
+                alert("Friend added successfully!");
+            } else { 
+                alert("User not found!"); 
+            }
+            btn.disabled = false;
+            btn.innerText = 'Add';
+        });
+
+        function timeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 60) return "Just now";
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes}m ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h ago`;
+            return `${Math.floor(hours / 24)}d ago`;
+        }
+
+        window.triggerLoveAnimation = () => {
+            for(let i=0; i<40; i++) {
+                let heart = document.createElement('div');
+                heart.innerHTML = '❤️';
+                heart.className = 'fixed text-3xl animate-fall z-[100] pointer-events-none';
+                heart.style.left = Math.random() * 100 + 'vw';
+                heart.style.top = '-50px';
+                heart.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                heart.style.animationDelay = (Math.random() * 2) + 's';
+                document.body.appendChild(heart);
+                setTimeout(() => heart.remove(), 6000);
+            }
+        }
+
+        function updateChatHeader(friendData) {
+            document.getElementById('chat-avatar').src = friendData.avatar;
+            
+            let displayName = friendData.nickname || friendData.username;
+            document.getElementById('chat-display-name').innerText = displayName;
+            
+            const origNameEl = document.getElementById('chat-original-name');
+            if(friendData.nickname) {
+                origNameEl.innerText = `(${friendData.username})`;
+                origNameEl.classList.remove('hidden');
+            } else {
+                origNameEl.classList.add('hidden');
+            }
+            
+            const statusEl = document.getElementById('chat-status');
+            let batteryText = friendData.battery !== undefined ? ` | 🔋 ${friendData.battery}% ${friendData.isCharging ? '⚡' : ''}` : '';
+            if(friendData.isOnline) {
+                statusEl.innerText = 'Online' + batteryText;
+                statusEl.classList.replace('text-gray-500', 'text-green-500');
+            } else {
+                const last = friendData.lastSeen ? friendData.lastSeen.toDate() : new Date();
+                statusEl.innerText = 'Last seen ' + timeAgo(last) + batteryText;
+                statusEl.classList.replace('text-green-500', 'text-gray-500');
+            }
+        }
+
+        document.getElementById('close-options-modal-btn').addEventListener('click', () => {
+            document.getElementById('user-options-modal').classList.add('hidden');
+        });
+
+        window.openPrivateChat = function(friend) {
+            currentMode = 'private';
+            currentChatFriend = friend;
+            
+            if (window.innerWidth < 768) {
+                sidebar.classList.add('hidden');
+                mainContentArea.classList.remove('hidden');
+                mainContentArea.classList.add('flex');
+            }
+
+            noChatHeader.classList.add('hidden');
+            noChatHeader.classList.remove('flex');
+            chatHeader.classList.remove('hidden');
+            messagesDiv.classList.remove('hidden');
+            inputArea.classList.remove('hidden');
+            
+            document.getElementById('edit-nickname-btn').classList.remove('hidden');
+
+            updateChatHeader(friend);
+            
+            const loveBtn = document.getElementById('love-btn');
+            const chatUserProfile = document.getElementById('chat-user-profile');
+            
+            const isPartner = currentUserDoc.partnerUid === friend.uid;
+            if(isPartner) {
+                loveBtn.classList.remove('hidden');
+            } else {
+                loveBtn.classList.add('hidden');
+            }
+
+            chatUserProfile.onclick = () => {
+                document.getElementById('options-avatar').src = friend.avatar;
+                document.getElementById('options-name').innerText = friend.nickname || friend.username;
+                let bioText = friend.bio ? ` - "${friend.bio}"` : '';
+                document.getElementById('options-username').innerText = `${friend.username} ${friend.gender ? '('+friend.gender+')' : ''} ${bioText}`;
+                
+                const partnerBtn = document.getElementById('modal-partner-btn');
+                const pinBtn = document.getElementById('modal-pin-btn');
+                const archiveBtn = document.getElementById('modal-archive-btn');
+                
+                const currentIsPartner = currentUserDoc.partnerUid === friend.uid;
+                partnerBtn.innerText = currentIsPartner ? 'Lepas Status Pasangan 💔' : 'Jadikan Pasangan 💖';
+                partnerBtn.className = currentIsPartner 
+                    ? 'w-full py-3.5 rounded-xl font-bold text-pink-600 bg-pink-50 hover:bg-pink-100 transition' 
+                    : 'w-full py-3.5 rounded-xl font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition';
+                
+                pinBtn.innerText = friend.isPinned ? 'Lepas Sematan' : 'Sematkan 📌';
+                pinBtn.className = friend.isPinned 
+                    ? 'w-full py-3.5 rounded-xl font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition' 
+                    : 'w-full py-3.5 rounded-xl font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition';
+                
+                archiveBtn.innerText = friend.isArchived ? 'Batal Arsipkan 📥' : 'Arsipkan 📦';
+                archiveBtn.className = friend.isArchived 
+                    ? 'w-full py-3.5 rounded-xl font-bold text-gray-700 bg-gray-200 hover:bg-gray-300 transition' 
+                    : 'w-full py-3.5 rounded-xl font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition';
+
+                partnerBtn.onclick = async () => {
+                    if(currentUserDoc.partnerUid === friend.uid) {
+                        await updateDoc(doc(db, "users", currentUserDoc.uid), { partnerUid: null });
+                        currentUserDoc.partnerUid = null;
+                    } else {
+                        await updateDoc(doc(db, "users", currentUserDoc.uid), { partnerUid: friend.uid });
+                        currentUserDoc.partnerUid = friend.uid;
+                    }
+                    document.getElementById('user-options-modal').classList.add('hidden');
+                    openPrivateChat(friend); 
+                };
+
+                pinBtn.onclick = async () => {
+                    await updateDoc(doc(db, "users", currentUserDoc.uid, "friends", friend.uid), { isPinned: !friend.isPinned });
+                    friend.isPinned = !friend.isPinned;
+                    document.getElementById('user-options-modal').classList.add('hidden');
+                    openPrivateChat(friend);
+                };
+
+                archiveBtn.onclick = async () => {
+                    await updateDoc(doc(db, "users", currentUserDoc.uid, "friends", friend.uid), { isArchived: !friend.isArchived });
+                    friend.isArchived = !friend.isArchived;
+                    document.getElementById('user-options-modal').classList.add('hidden');
+                    openPrivateChat(friend);
+                };
+
+                document.getElementById('user-options-modal').classList.remove('hidden');
+            };
+
+            loveBtn.onclick = async () => {
+                triggerLoveAnimation();
+                const chatId = currentUserDoc.uid < friend.uid ? `${currentUserDoc.uid}_${friend.uid}` : `${friend.uid}_${currentUserDoc.uid}`;
+                await addDoc(collection(db, "chats", chatId, "messages"), {
+                    senderId: currentUserDoc.uid,
+                    type: 'love_trigger',
+                    timestamp: serverTimestamp()
+                });
+            };
+
+            if(window.activeChatUnsubscribe) window.activeChatUnsubscribe();
+            window.activeChatUnsubscribe = onSnapshot(doc(db, "users", friend.uid), async (docSnap) => {
+                if(docSnap.exists()) {
+                    const data = docSnap.data();
+                    const friendRelSnap = await getDoc(doc(db, "users", currentUserDoc.uid, "friends", friend.uid));
+                    if(friendRelSnap.exists()) {
+                        data.nickname = friendRelSnap.data().nickname;
+                        data.isPinned = friendRelSnap.data().isPinned;
+                        data.isArchived = friendRelSnap.data().isArchived;
+                    }
+                    updateChatHeader(data);
+                    currentChatFriend = data;
+                }
+            });
+
+            if(messagesUnsubscribe) messagesUnsubscribe();
+            const chatId = currentUserDoc.uid < friend.uid ? `${currentUserDoc.uid}_${friend.uid}` : `${friend.uid}_${currentUserDoc.uid}`;
+            const q = query(collection(db, "chats", chatId, "messages"), orderBy("timestamp", "asc"));
+            messagesUnsubscribe = onSnapshot(q, (snapshot) => {
+                messagesDiv.innerHTML = '';
+                snapshot.forEach((docSnap) => {
+                    const msg = docSnap.data();
+                    if (msg.type === 'love_trigger') {
+                        const now = new Date();
+                        if (msg.timestamp && (now - msg.timestamp.toDate() < 5000)) {
+                            triggerLoveAnimation();
+                        }
+                        return;
+                    }
+                    if (msg.senderId !== currentUserDoc.uid && !msg.isRead) {
+                        updateDoc(docSnap.ref, { isRead: true });
+                    }
+                    displayMessage(msg, docSnap.id);
+                });
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            });
+        };
+
+        // Public Zone functions
+        document.getElementById('btn-global-chat').addEventListener('click', () => {
+            currentMode = 'public';
+            if (window.innerWidth < 768) {
+                sidebar.classList.add('hidden');
+                mainContentArea.classList.remove('hidden');
+                mainContentArea.classList.add('flex');
+            }
+            openPublicChat();
+        });
+
+        function openPublicChat() {
+            noChatHeader.classList.add('hidden');
+            noChatHeader.classList.remove('flex');
+            chatHeader.classList.remove('hidden');
+            messagesDiv.classList.remove('hidden');
+            inputArea.classList.remove('hidden');
+            
+            document.getElementById('chat-avatar').src = 'https://api.dicebear.com/7.x/shapes/svg?seed=public&backgroundColor=6366f1';
+            document.getElementById('chat-display-name').innerText = 'Public Global Chat';
+            document.getElementById('chat-original-name').classList.add('hidden');
+            document.getElementById('edit-nickname-btn').classList.add('hidden');
+
+            document.getElementById('chat-status').innerText = 'Everyone is here';
+            document.getElementById('chat-status').className = 'text-xs text-indigo-500 font-bold mt-0.5';
+            
+            document.getElementById('love-btn').classList.add('hidden');
+            document.getElementById('chat-user-profile').onclick = null;
+
+            if(publicUnsubscribe) publicUnsubscribe();
+            const q = query(collection(db, "public_messages"), orderBy("timestamp", "asc"));
+            publicUnsubscribe = onSnapshot(q, (snapshot) => {
+                messagesDiv.innerHTML = '';
+                snapshot.forEach((docSnap) => displayMessage(docSnap.data(), docSnap.id));
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            });
+        }
+
+        // Random Chat Logic
+        document.getElementById('btn-random-chat').addEventListener('click', async () => {
+            if (!currentUserDoc.gender) {
+                alert("Silakan isi jenis kelamin kamu di Edit Profile terlebih dahulu untuk menggunakan fitur ini!");
+                document.getElementById('edit-modal').classList.remove('hidden');
+                return;
+            }
+            const pref = document.getElementById('random-chat-pref').value;
+            const statusEl = document.getElementById('random-chat-status');
+            statusEl.innerText = "Mencari teman chat...";
+            document.getElementById('btn-random-chat').disabled = true;
+
+            await setDoc(doc(db, "random_queue", currentUserDoc.uid), {
+                uid: currentUserDoc.uid,
+                username: currentUserDoc.username,
+                avatar: currentUserDoc.avatar,
+                gender: currentUserDoc.gender,
+                pref: pref,
+                timestamp: serverTimestamp()
+            });
+
+            const qQueue = query(collection(db, "random_queue"), orderBy("timestamp", "asc"));
+            const queueSnap = await getDocs(qQueue);
+            let opponent = null;
+            queueSnap.forEach(docSnap => {
+                const potential = docSnap.data();
+                if (potential.uid !== currentUserDoc.uid && !opponent) {
+                    const matchPref1 = pref === 'Bebas' || pref === potential.gender;
+                    const matchPref2 = potential.pref === 'Bebas' || potential.pref === currentUserDoc.gender;
+                    if (matchPref1 && matchPref2) {
+                        opponent = potential;
+                    }
+                }
+            });
+
+            if (opponent) {
+                const chatId = `${opponent.uid}_${currentUserDoc.uid}`;
+                await setDoc(doc(db, "random_chats", chatId), {
+                    player1: opponent,
+                    player2: { uid: currentUserDoc.uid, username: currentUserDoc.username, avatar: currentUserDoc.avatar },
+                    status: 'playing',
+                    timestamp: serverTimestamp()
+                });
+                await deleteDoc(doc(db, "random_queue", currentUserDoc.uid));
+                await deleteDoc(doc(db, "random_queue", opponent.uid));
+                joinRandomChat(chatId);
+            } else {
+                const qChat1 = query(collection(db, "random_chats"), where("player1.uid", "==", currentUserDoc.uid), where("status", "==", "playing"));
+                window.randomQueueUnsubscribe = onSnapshot(qChat1, (snap) => {
+                    if (!snap.empty) {
+                        const chatDoc = snap.docs[0];
+                        joinRandomChat(chatDoc.id);
+                        if(window.randomQueueUnsubscribe) { window.randomQueueUnsubscribe(); window.randomQueueUnsubscribe = null; }
+                    }
+                });
+            }
+        });
+
+        function joinRandomChat(chatId) {
+            currentMode = 'random';
+            window.currentRandomChatId = chatId;
+            document.getElementById('random-chat-status').innerText = "Teman ditemukan!";
+            setTimeout(() => { document.getElementById('random-chat-status').innerText = ""; }, 2000);
+            document.getElementById('btn-random-chat').disabled = false;
+            
+            if (window.innerWidth < 768) {
+                sidebar.classList.add('hidden');
+                mainContentArea.classList.remove('hidden');
+                mainContentArea.classList.add('flex');
+            }
+
+            noChatHeader.classList.add('hidden');
+            noChatHeader.classList.remove('flex');
+            chatHeader.classList.remove('hidden');
+            messagesDiv.classList.remove('hidden');
+            inputArea.classList.remove('hidden');
+            
+            document.getElementById('chat-status').innerHTML = `<button id="stop-random-btn" class="text-xs bg-red-100 hover:bg-red-200 text-red-600 px-3 py-1 rounded-lg mt-1 font-bold transition active:scale-95">Stop Chat</button>`;
+            
+            if(window.randomChatUnsubscribe) window.randomChatUnsubscribe();
+            window.randomChatUnsubscribe = onSnapshot(doc(db, "random_chats", chatId), (docSnap) => {
+                if(!docSnap.exists()) return;
+                const data = docSnap.data();
+                if(data.status === 'quit') {
+                    document.getElementById('chat-status').innerText = "Teman chat telah meninggalkan obrolan.";
+                    document.getElementById('chat-status').className = "text-xs text-red-500 font-bold mt-0.5";
+                    inputArea.classList.add('hidden');
+                    return;
+                }
+                
+                const isPlayer1 = data.player1.uid === currentUserDoc.uid;
+                const opponent = isPlayer1 ? data.player2 : data.player1;
+                
+                document.getElementById('chat-avatar').src = opponent.avatar;
+                document.getElementById('chat-display-name').innerText = "Orang Asing";
+                document.getElementById('chat-original-name').classList.add('hidden');
+                document.getElementById('edit-nickname-btn').classList.add('hidden');
+                document.getElementById('love-btn').classList.add('hidden');
+                
+                const stopBtn = document.getElementById('stop-random-btn');
+                if(stopBtn) {
+                    stopBtn.onclick = async () => {
+                        await updateDoc(doc(db, "random_chats", chatId), { status: 'quit' });
+                        inputArea.classList.add('hidden');
+                        document.getElementById('chat-status').innerText = "Kamu mengakhiri obrolan.";
+                        document.getElementById('chat-status').className = "text-xs text-gray-500 font-bold mt-0.5";
+                    };
+                }
+            });
+
+            if(messagesUnsubscribe) messagesUnsubscribe();
+            const q = query(collection(db, "random_chats", chatId, "messages"), orderBy("timestamp", "asc"));
+            messagesUnsubscribe = onSnapshot(q, (snapshot) => {
+                messagesDiv.innerHTML = '';
+                snapshot.forEach((docSnap) => {
+                    displayMessage(docSnap.data(), docSnap.id);
+                });
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            });
+        }
+
+        window.deleteMessage = async (docId) => {
+            if(confirm("Delete this message?")) {
+                if(currentMode === 'private' && currentChatFriend) {
+                    const chatId = currentUserDoc.uid < currentChatFriend.uid ? `${currentUserDoc.uid}_${currentChatFriend.uid}` : `${currentChatFriend.uid}_${currentUserDoc.uid}`;
+                    await deleteDoc(doc(db, "chats", chatId, "messages", docId));
+                } else if (currentMode === 'public') {
+                    await deleteDoc(doc(db, "public_messages", docId));
+                } else if (currentMode === 'random' && window.currentRandomChatId) {
+                    await deleteDoc(doc(db, "random_chats", window.currentRandomChatId, "messages", docId));
+                }
+            }
+        };
+
+        function displayMessage(msg, docId) {
+            const isMe = msg.senderId === currentUserDoc.uid;
+            const msgEl = document.createElement('div');
+            msgEl.className = `flex w-full space-x-2 max-w-[85%] md:max-w-[75%] animate-slide-up ${isMe ? 'ml-auto justify-end space-x-reverse' : ''}`;
+            
+            const timeString = msg.timestamp ? msg.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+            
+            let ticksHTML = '';
+            if (isMe && currentMode === 'private') {
+                if (msg.isRead) {
+                    ticksHTML = `
+                    <div class="flex -space-x-1.5 ml-1">
+                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </div>`;
+                } else {
+                    ticksHTML = `
+                    <div class="flex ml-1">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </div>`;
+                }
+            }
+
+            if(msg.type === 'live_location') {
+                msgEl.innerHTML = `
+                    <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} w-full">
+                        <div class="px-4 py-3 text-[15px] leading-relaxed shadow-sm break-words ${isMe ? 'bg-blue-600 text-white chat-bubble-me' : 'bg-white border border-gray-100 text-gray-800 chat-bubble-other'} rounded-2xl">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="text-xl">📍</span>
+                                <span class="font-bold">Live Location</span>
+                            </div>
+                            <button onclick="viewLiveLocation('${msg.senderId}')" class="w-full bg-black/10 hover:bg-black/20 text-current font-bold py-2 rounded-lg transition active:scale-95">View Map</button>
+                            <div class="text-[10px] text-right mt-1.5 opacity-80 font-medium flex justify-end items-center gap-0.5">
+                                ${timeString}
+                                ${isMe ? `<button onclick="deleteMessage('${docId}')" class="ml-2 hover:text-red-300" title="Delete">🗑️</button>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                msgEl.innerHTML = `
+                    ${!isMe && currentMode === 'public' ? `<img src="${msg.avatar}" class="h-8 w-8 rounded-full object-cover self-end mb-1 shadow-sm border border-gray-200">` : ''}
+                    <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-full">
+                        ${!isMe && currentMode === 'public' ? `<span class="text-[11px] text-gray-500 mb-1 px-1 font-bold">${msg.senderName}</span>` : ''}
+                        <div class="px-4 py-2.5 text-[15px] leading-relaxed shadow-sm break-words max-w-full ${isMe ? 'bg-indigo-600 text-white chat-bubble-me rounded-2xl rounded-tr-sm' : 'bg-white border border-gray-100 text-gray-800 chat-bubble-other rounded-2xl rounded-tl-sm'}">
+                            <span>${msg.text}</span>
+                            <div class="text-[10px] text-right mt-1.5 ${isMe ? 'text-indigo-200' : 'text-gray-400'} font-medium flex justify-end items-center gap-0.5">
+                                ${timeString}
+                                ${ticksHTML}
+                                ${isMe ? `<button onclick="deleteMessage('${docId}')" class="ml-2 hover:text-red-300" title="Delete">🗑️</button>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            messagesDiv.appendChild(msgEl);
+        }
+
+        sendBtn.addEventListener('click', async () => {
+            const text = messageInput.value.trim();
+            if(!text) return;
+            messageInput.value = '';
+            
+            const msgData = {
+                senderId: currentUserDoc.uid,
+                senderName: currentUserDoc.username,
+                avatar: currentUserDoc.avatar,
+                text: text,
+                isRead: false,
+                timestamp: serverTimestamp()
+            };
+
+            if(currentMode === 'private' && currentChatFriend) {
+                const chatId = currentUserDoc.uid < currentChatFriend.uid ? `${currentUserDoc.uid}_${currentChatFriend.uid}` : `${currentChatFriend.uid}_${currentUserDoc.uid}`;
+                await addDoc(collection(db, "chats", chatId, "messages"), msgData);
+            } else if(currentMode === 'public') {
+                await addDoc(collection(db, "public_messages"), msgData);
+            } else if(currentMode === 'random' && window.currentRandomChatId) {
+                await addDoc(collection(db, "random_chats", window.currentRandomChatId, "messages"), msgData);
+            }
+        });
+
+        messageInput.addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') sendBtn.click();
+        });
+
+        // Live Location Logic
+        let watchId = null;
+        document.getElementById('share-loc-btn').addEventListener('click', () => {
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+                updateDoc(doc(db, "users", currentUserDoc.uid), { location: null });
+                document.getElementById('share-loc-btn').classList.remove('text-blue-500', 'bg-blue-50');
+                document.getElementById('share-loc-btn').classList.add('text-gray-400');
+            } else {
+                if (navigator.geolocation) {
+                    watchId = navigator.geolocation.watchPosition(async (pos) => {
+                        await updateDoc(doc(db, "users", currentUserDoc.uid), {
+                            location: { lat: pos.coords.latitude, lng: pos.coords.longitude }
+                        });
+                    }, (err) => console.error(err), { enableHighAccuracy: true });
+                    
+                    document.getElementById('share-loc-btn').classList.remove('text-gray-400');
+                    document.getElementById('share-loc-btn').classList.add('text-blue-500', 'bg-blue-50');
+                    
+                    const msgData = {
+                        senderId: currentUserDoc.uid,
+                        type: 'live_location',
+                        timestamp: serverTimestamp()
+                    };
+
+                    if(currentMode === 'private' && currentChatFriend) {
+                        const chatId = currentUserDoc.uid < currentChatFriend.uid ? `${currentUserDoc.uid}_${currentChatFriend.uid}` : `${currentChatFriend.uid}_${currentUserDoc.uid}`;
+                        addDoc(collection(db, "chats", chatId, "messages"), msgData);
+                    } else if(currentMode === 'public') {
+                        addDoc(collection(db, "public_messages"), msgData);
+                    } else if(currentMode === 'random' && window.currentRandomChatId) {
+                        addDoc(collection(db, "random_chats", window.currentRandomChatId, "messages"), msgData);
+                    }
+                } else {
+                    alert("Geolocation is not supported by this browser.");
+                }
+            }
+        });
+
+        let locationUnsubscribe = null;
+        window.viewLiveLocation = (uid) => {
+            document.getElementById('location-modal').classList.remove('hidden');
+            locationUnsubscribe = onSnapshot(doc(db, "users", uid), (snap) => {
+                if(snap.exists()) {
+                    const data = snap.data();
+                    if(data.location) {
+                        const {lat, lng} = data.location;
+                        document.getElementById('location-iframe').src = `https://www.openstreetmap.org/export/embed.html?bbox=${lng-0.005},${lat-0.005},${lng+0.005},${lat+0.005}&layer=mapnik&marker=${lat},${lng}`;
+                    } else {
+                        document.getElementById('location-iframe').srcdoc = `<div style="display:flex;height:100%;align-items:center;justify-content:center;font-family:sans-serif;color:#666;">User is no longer sharing location.</div>`;
+                    }
+                }
+            });
+        };
+
+        window.closeLocationModal = () => {
+            document.getElementById('location-modal').classList.add('hidden');
+            if(locationUnsubscribe) locationUnsubscribe();
+            document.getElementById('location-iframe').src = '';
+        };
+
+        document.getElementById('open-edit-modal-btn').addEventListener('click', () => document.getElementById('edit-modal').classList.remove('hidden'));
+        document.getElementById('close-modal-btn').addEventListener('click', () => document.getElementById('edit-modal').classList.add('hidden'));
+        
+        document.getElementById('save-profile-btn').addEventListener('click', async () => {
+            const newName = document.getElementById('edit-username').value.trim();
+            const newBio = document.getElementById('edit-bio').value.trim();
+            const newGender = document.getElementById('edit-gender').value;
+            if(!newName) return;
+            
+            const btn = document.getElementById('save-profile-btn');
+            btn.innerText = 'Saving...';
+            btn.disabled = true;
+
+            try {
+                await updateDoc(doc(db, "users", currentUserDoc.uid), { 
+                    username: newName,
+                    bio: newBio,
+                    gender: newGender
+                });
+                currentUserDoc.username = newName;
+                currentUserDoc.bio = newBio;
+                currentUserDoc.gender = newGender;
+                document.getElementById('my-username').innerText = newName;
+                document.getElementById('edit-modal').classList.add('hidden');
+            } catch (error) {
+                alert("Failed to update profile.");
+            } finally {
+                btn.innerText = 'Save';
+                btn.disabled = false;
+            }
+        });
+
+        // Nickname Logic
+        document.getElementById('edit-nickname-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            if(!currentChatFriend) return;
+            document.getElementById('edit-nickname').value = currentChatFriend.nickname || '';
+            document.getElementById('nickname-modal').classList.remove('hidden');
+        });
+
+        document.getElementById('close-nickname-modal-btn').addEventListener('click', () => {
+            document.getElementById('nickname-modal').classList.add('hidden');
+        });
+
+        document.getElementById('save-nickname-btn').addEventListener('click', async () => {
+            if(!currentChatFriend) return;
+            const nickname = document.getElementById('edit-nickname').value.trim();
+            const btn = document.getElementById('save-nickname-btn');
+            btn.innerText = 'Saving...';
+            btn.disabled = true;
+            
+            try {
+                await updateDoc(doc(db, "users", currentUserDoc.uid, "friends", currentChatFriend.uid), {
+                    nickname: nickname || null
+                });
+                document.getElementById('nickname-modal').classList.add('hidden');
+            } catch(e) {
+                console.error(e);
+            } finally {
+                btn.innerText = 'Save';
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('remove-nickname-btn').addEventListener('click', async () => {
+            if(!currentChatFriend) return;
+            const btn = document.getElementById('remove-nickname-btn');
+            btn.innerText = 'Restoring...';
+            btn.disabled = true;
+            
+            try {
+                await updateDoc(doc(db, "users", currentUserDoc.uid, "friends", currentChatFriend.uid), {
+                    nickname: null
+                });
+                document.getElementById('nickname-modal').classList.add('hidden');
+            } catch(e) {
+                console.error(e);
+            } finally {
+                btn.innerText = 'Restore';
+                btn.disabled = false;
+            }
+        });
+
+        // ================= GAME LOGIC =================
+        let gameBoard = ['', '', '', '', '', '', '', '', ''];
+        let gameTurn = 'X'; 
+        let mySymbol = 'X';
+        let gameActive = false;
+        let isBotGame = false;
+        let opponentUser = null;
+        let currentGameId = null;
+        let gameUnsubscribe = null;
+        let queueUnsubscribe = null;
+        let currentGameData = null;
+        let gameChatUnsubscribe = null;
+        
+        let currentTKGameId = null;
+        let currentTKGameData = null;
+        let isTKGame = false;
+        
+        let myScore = 0;
+        let oppScore = 0;
+
+        const winPatterns = [
+            [0,1,2],[3,4,5],[6,7,8],
+            [0,3,6],[1,4,7],[2,5,8],
+            [0,4,8],[2,4,6]
+        ];
+
+        function checkWin(board) {
+            for(let pattern of winPatterns) {
+                const [a,b,c] = pattern;
+                if(board[a] && board[a] === board[b] && board[a] === board[c]) return board[a];
+            }
+            if(!board.includes('')) return 'Draw';
+            return null;
+        }
+
+        function resetBoard() {
+            gameBoard = ['', '', '', '', '', '', '', '', ''];
+            document.querySelectorAll('.ttt-cell').forEach(cell => {
+                cell.innerText = '';
+                cell.classList.remove('animate-pop', 'text-red-500', 'text-indigo-600');
+            });
+        }
+
+        function updateBoardUI() {
+            document.querySelectorAll('.ttt-cell').forEach((cell, index) => {
+                if(gameBoard[index] !== '' && cell.innerText === '') {
+                    cell.innerText = gameBoard[index];
+                    cell.classList.add('animate-pop');
+                    if(gameBoard[index] === 'X') cell.classList.add('text-indigo-600');
+                    if(gameBoard[index] === 'O') cell.classList.add('text-red-500');
+                } else if(gameBoard[index] === '') {
+                    cell.innerText = '';
+                    cell.classList.remove('animate-pop', 'text-red-500', 'text-indigo-600');
+                }
+            });
+        }
+
+        function showGameArea(opponent, botMode) {
+            if (window.innerWidth < 768) {
+                sidebar.classList.add('hidden');
+                mainContentArea.classList.remove('hidden');
+                mainContentArea.classList.add('flex');
+            }
+            noChatHeader.classList.add('hidden');
+            noChatHeader.classList.remove('flex');
+            chatHeader.classList.add('hidden');
+            messagesDiv.classList.add('hidden');
+            inputArea.classList.add('hidden');
+            
+            document.getElementById('game-area').classList.remove('hidden');
+            document.getElementById('game-area').classList.add('flex');
+
+            document.getElementById('game-opponent-avatar').src = opponent.avatar;
+            document.getElementById('game-opponent-username').innerText = opponent.username;
+            
+            document.getElementById('game-actions').classList.add('hidden');
+            document.getElementById('play-again-btn').classList.remove('hidden');
+            document.getElementById('rematch-status').classList.add('hidden');
+            document.getElementById('rematch-prompt').classList.add('hidden');
+
+            document.getElementById('my-score').innerText = isBotGame ? myScore : (currentGameData ? (currentGameData.player1.uid === currentUserDoc.uid ? currentGameData.score1 : currentGameData.score2) : 0);
+            document.getElementById('opp-score').innerText = isBotGame ? oppScore : (currentGameData ? (currentGameData.player1.uid === currentUserDoc.uid ? currentGameData.score2 : currentGameData.score1) : 0);
+
+            if(!botMode) {
+                document.getElementById('game-add-friend-btn').classList.remove('hidden');
+                document.getElementById('game-add-friend-btn').innerText = 'Add Friend';
+                document.getElementById('game-add-friend-btn').disabled = false;
+            } else {
+                document.getElementById('game-add-friend-btn').classList.add('hidden');
+            }
+            
+            if(isTKGame) {
+                document.getElementById('play-again-btn').classList.add('hidden');
+            }
+        }
+
+        document.getElementById('game-add-friend-btn').addEventListener('click', async () => {
+            if(opponentUser && opponentUser.uid) {
+                const btn = document.getElementById('game-add-friend-btn');
+                btn.innerText = 'Adding...';
+                await setDoc(doc(db, "users", currentUserDoc.uid, "friends", opponentUser.uid), { uid: opponentUser.uid, username: opponentUser.username, avatar: opponentUser.avatar, isPinned: false, isArchived: false });
+                await setDoc(doc(db, "users", opponentUser.uid, "friends", currentUserDoc.uid), { uid: currentUserDoc.uid, username: currentUserDoc.username, avatar: currentUserDoc.avatar, isPinned: false, isArchived: false });
+                btn.innerText = 'Added!';
+                btn.disabled = true;
+            }
+        });
+
+        document.getElementById('game-quit-btn').addEventListener('click', async () => {
+            if(!isBotGame && currentGameId) {
+                await updateDoc(doc(db, "tictactoe_games", currentGameId), { status: 'quit' });
+            }
+            if(currentTKGameId) {
+                await updateDoc(doc(db, "tebakkata_games", currentTKGameId), { status: 'quit' });
+            }
+            quitGame();
+        });
+
+        document.getElementById('back-from-game-btn').addEventListener('click', () => {
+            if(!isBotGame && currentGameId) {
+                updateDoc(doc(db, "tictactoe_games", currentGameId), { status: 'quit' });
+            }
+            if(currentTKGameId) {
+                updateDoc(doc(db, "tebakkata_games", currentTKGameId), { status: 'quit' });
+            }
+            quitGame();
+        });
+
+        async function clearTKGuesses(gameId) {
+            const guessesQuery = query(collection(db, "tebakkata_games", gameId, "guesses"));
+            const snapshot = await getDocs(guessesQuery);
+            snapshot.forEach((docSnap) => {
+                deleteDoc(doc(db, "tebakkata_games", gameId, "guesses", docSnap.id));
+            });
+        }
+
+        function quitGame() {
+            gameActive = false;
+            
+            if(isTKGame && currentTKGameId) {
+                clearTKGuesses(currentTKGameId);
+            }
+
+            isTKGame = false;
+            if(gameUnsubscribe) { gameUnsubscribe(); gameUnsubscribe = null; }
+            if(queueUnsubscribe) { queueUnsubscribe(); queueUnsubscribe = null; }
+            if(gameChatUnsubscribe) { gameChatUnsubscribe(); gameChatUnsubscribe = null; }
+            if(window.tkGameUnsubscribe) { window.tkGameUnsubscribe(); window.tkGameUnsubscribe = null; }
+            if(window.tkGuessesUnsubscribe) { window.tkGuessesUnsubscribe(); window.tkGuessesUnsubscribe = null; }
+            
+            currentGameId = null;
+            currentTKGameId = null;
+            currentGameData = null;
+            currentTKGameData = null;
+            myScore = 0;
+            oppScore = 0;
+            document.getElementById('match-status').innerText = "";
+            document.getElementById('room-status').innerText = "";
+            document.getElementById('room-code-input').value = "";
+            document.getElementById('find-match-btn').disabled = false;
+            document.getElementById('word-match-status').innerText = "";
+            document.getElementById('word-room-status').innerText = "";
+            document.getElementById('word-room-code-input').value = "";
+            document.getElementById('find-word-match-btn').disabled = false;
+            
+            document.getElementById('game-area').classList.add('hidden');
+            document.getElementById('game-area').classList.remove('flex');
+            document.getElementById('game-chat-container').classList.add('hidden');
+            document.getElementById('game-chat-container').classList.remove('flex');
+            
+            document.getElementById('tictactoe-board').classList.remove('hidden');
+            document.getElementById('tebakkata-board').classList.add('hidden');
+            document.getElementById('game-score-display').classList.remove('hidden');
+            
+            switchTab('game');
+        }
+
+        // Room Feature
+        function generateRoomCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for(let i=0; i<6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+            return code;
+        }
+
+        document.getElementById('create-room-btn').addEventListener('click', async () => {
+            const code = generateRoomCode();
+            document.getElementById('room-status').innerText = `Room Code: ${code} (Waiting...)`;
+            
+            await setDoc(doc(db, "tictactoe_games", code), {
+                player1: { uid: currentUserDoc.uid, username: currentUserDoc.username, avatar: currentUserDoc.avatar },
+                board: ['', '', '', '', '', '', '', '', ''],
+                turn: 'X',
+                status: 'waiting',
+                winner: null,
+                score1: 0,
+                score2: 0,
+                rematch1: false,
+                rematch2: false
+            });
+
+            currentGameId = code;
+            isBotGame = false;
+            
+            if(gameUnsubscribe) gameUnsubscribe();
+            
+            gameUnsubscribe = onSnapshot(doc(db, "tictactoe_games", code), (docSnap) => {
+                if(!docSnap.exists()) return;
+                const data = docSnap.data();
+                if(data.status === 'playing') {
+                    if(gameUnsubscribe) gameUnsubscribe();
+                    document.getElementById('room-status').innerText = "";
+                    joinGame(code);
+                }
+            });
+        });
+
+        document.getElementById('join-room-btn').addEventListener('click', async () => {
+            const code = document.getElementById('room-code-input').value.trim().toUpperCase();
+            if(!code) return;
+            
+            document.getElementById('room-status').innerText = "Joining...";
+            const docRef = doc(db, "tictactoe_games", code);
+            const docSnap = await getDoc(docRef);
+            
+            if(docSnap.exists() && docSnap.data().status === 'waiting') {
+                await updateDoc(docRef, {
+                    player2: { uid: currentUserDoc.uid, username: currentUserDoc.username, avatar: currentUserDoc.avatar },
+                    status: 'playing'
+                });
+                document.getElementById('room-status').innerText = "";
+                joinGame(code);
+            } else {
+                document.getElementById('room-status').innerText = "Room not found or full.";
+            }
+        });
+
+        document.getElementById('play-bot-btn').addEventListener('click', () => {
+            isBotGame = true;
+            gameActive = true;
+            mySymbol = 'X';
+            gameTurn = 'X';
+            myScore = 0;
+            oppScore = 0;
+            opponentUser = { username: 'Smart Bot', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=bot' };
+            resetBoard();
+            showGameArea(opponentUser, true);
+            document.getElementById('game-status-text').innerText = "Your Turn (X)";
+            document.getElementById('game-chat-container').classList.add('hidden');
+            document.getElementById('game-chat-container').classList.remove('flex');
+        });
+
+        function botMove() {
+            if(!gameActive) return;
+            let emptyIndices = [];
+            gameBoard.forEach((val, idx) => { if(val === '') emptyIndices.push(idx); });
+            if(emptyIndices.length > 0) {
+                let randomIdx = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+                gameBoard[randomIdx] = 'O';
+                updateBoardUI();
+                let win = checkWin(gameBoard);
+                if(win) { 
+                    handleWin(win); 
+                    return; 
+                }
+            }
+            gameTurn = 'X';
+            document.getElementById('game-status-text').innerText = "Your Turn (X)";
+        }
+
+        function handleWin(winner) {
+            gameActive = false;
+            if(winner === 'Draw') {
+                document.getElementById('game-status-text').innerText = "It's a Draw!";
+            } else if(winner === mySymbol) {
+                document.getElementById('game-status-text').innerText = "You Win! 🎉";
+                if(isBotGame) myScore++;
+            } else {
+                document.getElementById('game-status-text').innerText = "You Lose! 😢";
+                if(isBotGame) oppScore++;
+            }
+
+            if(isBotGame) {
+                document.getElementById('my-score').innerText = myScore;
+                document.getElementById('opp-score').innerText = oppScore;
+            }
+
+            document.getElementById('game-actions').classList.remove('hidden');
+            document.getElementById('play-again-btn').classList.remove('hidden');
+            document.getElementById('rematch-status').classList.add('hidden');
+            document.getElementById('rematch-prompt').classList.add('hidden');
+        }
+
+        document.getElementById('play-again-btn').addEventListener('click', async () => {
+            if (isBotGame) {
+                resetBoard();
+                gameActive = true;
+                gameTurn = 'X'; 
+                document.getElementById('game-actions').classList.add('hidden');
+                document.getElementById('game-status-text').innerText = "Your Turn (X)";
+            } else if (!isTKGame) {
+                const isPlayer1 = currentGameData.player1.uid === currentUserDoc.uid;
+                document.getElementById('play-again-btn').classList.add('hidden');
+                document.getElementById('rematch-status').classList.remove('hidden');
+                document.getElementById('rematch-status').innerText = "Waiting for opponent...";
+                await updateDoc(doc(db, "tictactoe_games", currentGameId), {
+                    [isPlayer1 ? 'rematch1' : 'rematch2']: true
+                });
+            } else if (isTKGame) {
+                if (currentTKGameId) {
+                    await clearTKGuesses(currentTKGameId);
+                    await updateDoc(doc(db, "tebakkata_games", currentTKGameId), {
+                        status: 'input_word',
+                        word1: '',
+                        word2: '',
+                        winner: null,
+                        tebakLawanCount1: 0,
+                        tebakLawanCount2: 0
+                    });
+                }
+            }
+        });
+
+        document.getElementById('accept-rematch-btn').addEventListener('click', async () => {
+            if(!isTKGame) {
+                const isPlayer1 = currentGameData.player1.uid === currentUserDoc.uid;
+                await updateDoc(doc(db, "tictactoe_games", currentGameId), {
+                    [isPlayer1 ? 'rematch1' : 'rematch2']: true
+                });
+            }
+        });
+
+        document.getElementById('decline-rematch-btn').addEventListener('click', async () => {
+            if(!isTKGame) {
+                await updateDoc(doc(db, "tictactoe_games", currentGameId), { status: 'quit' });
+            }
+            quitGame();
+        });
+
+        document.querySelectorAll('.ttt-cell').forEach(cell => {
+            cell.addEventListener('click', async (e) => {
+                if(!gameActive) return;
+                const index = e.target.getAttribute('data-index');
+                if(gameBoard[index] !== '') return;
+
+                if(isBotGame) {
+                    if(gameTurn !== mySymbol) return;
+                    gameBoard[index] = mySymbol;
+                    updateBoardUI();
+                    let win = checkWin(gameBoard);
+                    if(win) { 
+                        if(win === mySymbol) {
+                            updateDoc(doc(db, "users", currentUserDoc.uid), { points: increment(1) });
+                        }
+                        handleWin(win); 
+                        return; 
+                    }
+                    
+                    gameTurn = 'O';
+                    document.getElementById('game-status-text').innerText = "Bot's Turn...";
+                    setTimeout(botMove, 600);
+                } else {
+                    if(gameTurn !== mySymbol) return;
+                    gameBoard[index] = mySymbol;
+                    updateBoardUI();
+                    
+                    let win = checkWin(gameBoard);
+                    let updatePayload = {
+                        board: gameBoard,
+                        turn: mySymbol === 'X' ? 'O' : 'X',
+                        winner: win
+                    };
+
+                    if (win) {
+                        updatePayload.status = 'finished';
+                        const isPlayer1 = currentGameData.player1.uid === currentUserDoc.uid;
+                        if (win === mySymbol) {
+                            updatePayload[isPlayer1 ? 'score1' : 'score2'] = increment(1);
+                            updateDoc(doc(db, "users", currentUserDoc.uid), { points: increment(1) });
+                        }
+                    }
+
+                    await updateDoc(doc(db, "tictactoe_games", currentGameId), updatePayload);
+                }
+            });
+        });
+
+        document.getElementById('find-match-btn').addEventListener('click', async () => {
+            isBotGame = false;
+            document.getElementById('match-status').innerText = "Searching for opponent...";
+            document.getElementById('find-match-btn').disabled = true;
+
+            await setDoc(doc(db, "tictactoe_queue", currentUserDoc.uid), {
+                uid: currentUserDoc.uid,
+                username: currentUserDoc.username,
+                avatar: currentUserDoc.avatar,
+                timestamp: serverTimestamp()
+            });
+
+            const qQueue = query(collection(db, "tictactoe_queue"), orderBy("timestamp", "asc"));
+            const queueSnap = await getDocs(qQueue);
+            let opponent = null;
+            queueSnap.forEach(docSnap => {
+                if(docSnap.id !== currentUserDoc.uid && !opponent) {
+                    opponent = docSnap.data();
+                }
+            });
+
+            if(opponent) {
+                const gameId = `${opponent.uid}_${currentUserDoc.uid}`;
+                await setDoc(doc(db, "tictactoe_games", gameId), {
+                    player1: opponent,
+                    player2: { uid: currentUserDoc.uid, username: currentUserDoc.username, avatar: currentUserDoc.avatar },
+                    board: ['', '', '', '', '', '', '', '', ''],
+                    turn: 'X',
+                    status: 'playing',
+                    winner: null,
+                    score1: 0,
+                    score2: 0,
+                    rematch1: false,
+                    rematch2: false
+                });
+                await deleteDoc(doc(db, "tictactoe_queue", currentUserDoc.uid));
+                await deleteDoc(doc(db, "tictactoe_queue", opponent.uid));
+                joinGame(gameId);
+            } else {
+                const qGame = query(collection(db, "tictactoe_games"), where("player1.uid", "==", currentUserDoc.uid), where("status", "==", "playing"));
+                queueUnsubscribe = onSnapshot(qGame, (snap) => {
+                    if(!snap.empty) {
+                        const gameDoc = snap.docs[0];
+                        joinGame(gameDoc.id);
+                        if(queueUnsubscribe) { queueUnsubscribe(); queueUnsubscribe = null; }
+                    }
+                });
+            }
+        });
+
+        // Game Chat Logic
+        document.getElementById('game-send-btn').addEventListener('click', async () => {
+            const input = document.getElementById('game-message-input');
+            const text = input.value.trim();
+            if(!text || (!currentGameId && !currentTKGameId) || isBotGame) return;
+            input.value = '';
+            
+            const targetCollection = isTKGame ? "tebakkata_games" : "tictactoe_games";
+            const targetId = isTKGame ? currentTKGameId : currentGameId;
+            
+            await addDoc(collection(db, targetCollection, targetId, "messages"), {
+                senderId: currentUserDoc.uid,
+                senderName: currentUserDoc.username,
+                text: text,
+                timestamp: serverTimestamp()
+            });
+        });
+
+        document.getElementById('game-message-input').addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') document.getElementById('game-send-btn').click();
+        });
+
+        function joinGame(gameId) {
+            currentGameId = gameId;
+            document.getElementById('match-status').innerText = "Match found!";
+            
+            // Setup game chat listener
+            if(!isBotGame) {
+                document.getElementById('game-chat-container').classList.remove('hidden');
+                document.getElementById('game-chat-container').classList.add('flex');
+                
+                if(gameChatUnsubscribe) gameChatUnsubscribe();
+                gameChatUnsubscribe = onSnapshot(query(collection(db, "tictactoe_games", gameId, "messages"), orderBy("timestamp", "asc")), (snap) => {
+                    const container = document.getElementById('game-messages');
+                    container.innerHTML = '';
+                    snap.forEach(docSnap => {
+                        const m = docSnap.data();
+                        const isMe = m.senderId === currentUserDoc.uid;
+                        container.innerHTML += `
+                            <div class="max-w-[85%] px-3 py-2 rounded-xl shadow-sm ${isMe ? 'bg-indigo-600 text-white self-end ml-auto rounded-tr-sm' : 'bg-white border border-gray-200 text-gray-800 self-start rounded-tl-sm'}">
+                                ${!isMe ? `<span class="text-[10px] font-bold text-gray-500 block mb-0.5">${m.senderName}</span>` : ''}
+                                <span>${m.text}</span>
+                            </div>
+                        `;
+                    });
+                    container.scrollTop = container.scrollHeight;
+                });
+            }
+
+            gameUnsubscribe = onSnapshot(doc(db, "tictactoe_games", gameId), (docSnap) => {
+                if(!docSnap.exists()) return;
+                const data = docSnap.data();
+                currentGameData = data;
+                
+                if(data.status === 'quit') {
+                    document.getElementById('game-status-text').innerText = "Opponent quit.";
+                    gameActive = false;
+                    document.getElementById('game-actions').classList.add('hidden');
+                    return;
+                }
+
+                gameBoard = data.board;
+                updateBoardUI();
+                
+                const isPlayer1 = data.player1.uid === currentUserDoc.uid;
+                mySymbol = isPlayer1 ? 'X' : 'O';
+                opponentUser = isPlayer1 ? data.player2 : data.player1;
+                
+                myScore = isPlayer1 ? data.score1 : data.score2;
+                oppScore = isPlayer1 ? data.score2 : data.score1;
+
+                showGameArea(opponentUser, false);
+
+                if(data.winner) {
+                    handleWin(data.winner);
+                    
+                    const myRematch = isPlayer1 ? data.rematch1 : data.rematch2;
+                    const oppRematch = isPlayer1 ? data.rematch2 : data.rematch1;
+
+                    document.getElementById('play-again-btn').classList.add('hidden');
+                    document.getElementById('rematch-status').classList.add('hidden');
+                    document.getElementById('rematch-prompt').classList.add('hidden');
+
+                    if (myRematch && oppRematch) {
+                        if (isPlayer1) {
+                            updateDoc(doc(db, "tictactoe_games", currentGameId), {
+                                board: ['', '', '', '', '', '', '', '', ''],
+                                winner: null,
+                                status: 'playing',
+                                rematch1: false,
+                                rematch2: false,
+                                turn: 'X'
+                            });
+                        }
+                    } else if (myRematch && !oppRematch) {
+                        document.getElementById('rematch-status').classList.remove('hidden');
+                        document.getElementById('rematch-status').innerText = "Waiting for opponent to accept...";
+                    } else if (!myRematch && oppRematch) {
+                        document.getElementById('rematch-prompt').classList.remove('hidden');
+                    } else {
+                        document.getElementById('play-again-btn').classList.remove('hidden');
+                    }
+                } else {
+                    document.getElementById('game-actions').classList.add('hidden');
+                    document.getElementById('rematch-status').classList.add('hidden');
+                    document.getElementById('rematch-prompt').classList.add('hidden');
+                    gameTurn = data.turn;
+                    gameActive = true;
+                    if(gameTurn === mySymbol) {
+                        document.getElementById('game-status-text').innerText = `Your Turn (${mySymbol})`;
+                    } else {
+                        document.getElementById('game-status-text').innerText = `Opponent's Turn (${gameTurn})`;
+                    }
+                }
+            });
+        }
+
+        // ================= TEBAK KATA LOGIC =================
+        document.getElementById('find-word-match-btn').addEventListener('click', async () => {
+            document.getElementById('word-match-status').innerText = "Mencari lawan...";
+            document.getElementById('find-word-match-btn').disabled = true;
+
+            await setDoc(doc(db, "tebakkata_queue", currentUserDoc.uid), {
+                uid: currentUserDoc.uid,
+                username: currentUserDoc.username,
+                avatar: currentUserDoc.avatar,
+                timestamp: serverTimestamp()
+            });
+
+            const qQueue = query(collection(db, "tebakkata_queue"), orderBy("timestamp", "asc"));
+            const queueSnap = await getDocs(qQueue);
+            let opponent = null;
+            queueSnap.forEach(docSnap => {
+                if(docSnap.id !== currentUserDoc.uid && !opponent) {
+                    opponent = docSnap.data();
+                }
+            });
+
+            if(opponent) {
+                const gameId = `${opponent.uid}_${currentUserDoc.uid}`;
+                await setDoc(doc(db, "tebakkata_games", gameId), {
+                    player1: opponent,
+                    player2: { uid: currentUserDoc.uid, username: currentUserDoc.username, avatar: currentUserDoc.avatar },
+                    status: 'input_word',
+                    word1: '',
+                    word2: '',
+                    winner: null,
+                    turn: opponent.uid,
+                    tebakLawanCount1: 0,
+                    tebakLawanCount2: 0
+                });
+                await deleteDoc(doc(db, "tebakkata_queue", currentUserDoc.uid));
+                await deleteDoc(doc(db, "tebakkata_queue", opponent.uid));
+                joinTKGame(gameId);
+            } else {
+                const qGame = query(collection(db, "tebakkata_games"), where("player1.uid", "==", currentUserDoc.uid), where("status", "==", "input_word"));
+                window.tkQueueUnsubscribe = onSnapshot(qGame, (snap) => {
+                    if(!snap.empty) {
+                        const gameDoc = snap.docs[0];
+                        joinTKGame(gameDoc.id);
+                        if(window.tkQueueUnsubscribe) { window.tkQueueUnsubscribe(); window.tkQueueUnsubscribe = null; }
+                    }
+                });
+            }
+        });
+
+        document.getElementById('create-word-room-btn').addEventListener('click', async () => {
+            const code = generateRoomCode(); 
+            document.getElementById('word-room-status').innerText = `Kode: ${code} (Menunggu...)`;
+            
+            await setDoc(doc(db, "tebakkata_games", code), {
+                player1: { uid: currentUserDoc.uid, username: currentUserDoc.username, avatar: currentUserDoc.avatar },
+                status: 'waiting',
+                word1: '',
+                word2: '',
+                winner: null,
+                turn: currentUserDoc.uid,
+                tebakLawanCount1: 0,
+                tebakLawanCount2: 0
+            });
+
+            if(window.tkGameUnsubscribe) window.tkGameUnsubscribe();
+            
+            window.tkGameUnsubscribe = onSnapshot(doc(db, "tebakkata_games", code), (docSnap) => {
+                if(!docSnap.exists()) return;
+                const data = docSnap.data();
+                if(data.status === 'input_word') {
+                    document.getElementById('word-room-status').innerText = "";
+                    joinTKGame(code);
+                }
+            });
+        });
+
+        document.getElementById('join-word-room-btn').addEventListener('click', async () => {
+            const code = document.getElementById('word-room-code-input').value.trim().toUpperCase();
+            if(!code) return;
+            
+            document.getElementById('word-room-status').innerText = "Bergabung...";
+            const docRef = doc(db, "tebakkata_games", code);
+            const docSnap = await getDoc(docRef);
+            
+            if(docSnap.exists() && docSnap.data().status === 'waiting') {
+                await updateDoc(docRef, {
+                    player2: { uid: currentUserDoc.uid, username: currentUserDoc.username, avatar: currentUserDoc.avatar },
+                    status: 'input_word'
+                });
+                document.getElementById('word-room-status').innerText = "";
+                joinTKGame(code);
+            } else {
+                document.getElementById('word-room-status').innerText = "Room tidak ditemukan/penuh.";
+            }
+        });
+
+        function joinTKGame(gameId) {
+            currentTKGameId = gameId;
+            isTKGame = true;
+            document.getElementById('word-match-status').innerText = "Match found!";
+            setTimeout(() => { document.getElementById('word-match-status').innerText = ""; }, 2000);
+            
+            document.getElementById('tictactoe-board').classList.add('hidden');
+            document.getElementById('tebakkata-board').classList.remove('hidden');
+            document.getElementById('tebakkata-board').classList.add('flex');
+            document.getElementById('game-chat-container').classList.add('hidden');
+            document.getElementById('game-score-display').classList.add('hidden');
+            
+            // Setup game chat for TK
+            document.getElementById('game-chat-container').classList.remove('hidden');
+            document.getElementById('game-chat-container').classList.add('flex');
+            if(gameChatUnsubscribe) gameChatUnsubscribe();
+            gameChatUnsubscribe = onSnapshot(query(collection(db, "tebakkata_games", gameId, "messages"), orderBy("timestamp", "asc")), (snap) => {
+                const container = document.getElementById('game-messages');
+                container.innerHTML = '';
+                snap.forEach(docSnap => {
+                    const m = docSnap.data();
+                    const isMe = m.senderId === currentUserDoc.uid;
+                    container.innerHTML += `
+                        <div class="max-w-[85%] px-3 py-2 rounded-xl shadow-sm ${isMe ? 'bg-indigo-600 text-white self-end ml-auto rounded-tr-sm' : 'bg-white border border-gray-200 text-gray-800 self-start rounded-tl-sm'}">
+                            ${!isMe ? `<span class="text-[10px] font-bold text-gray-500 block mb-0.5">${m.senderName}</span>` : ''}
+                            <span>${m.text}</span>
+                        </div>
+                    `;
+                });
+                container.scrollTop = container.scrollHeight;
+            });
+            
+            if(window.tkGameUnsubscribe) window.tkGameUnsubscribe();
+            window.tkGameUnsubscribe = onSnapshot(doc(db, "tebakkata_games", gameId), (docSnap) => {
+                if(!docSnap.exists()) return;
+                const data = docSnap.data();
+                currentTKGameData = data;
+                
+                if(data.status === 'quit') {
+                    document.getElementById('game-status-text').innerText = "Lawan keluar.";
+                    document.getElementById('tk-input-phase').classList.add('hidden');
+                    document.getElementById('tk-playing-phase').classList.add('hidden');
+                    document.getElementById('tk-final-phase').classList.add('hidden');
+                    return;
+                }
+                
+                const isPlayer1 = data.player1.uid === currentUserDoc.uid;
+                const opponentUser = isPlayer1 ? data.player2 : data.player1;
+                
+                showGameArea(opponentUser, false); 
+                document.getElementById('tictactoe-board').classList.add('hidden');
+                document.getElementById('tebakkata-board').classList.remove('hidden');
+                document.getElementById('game-score-display').classList.add('hidden');
+                
+                if(data.winner) {
+                    document.getElementById('game-status-text').innerText = data.winner === currentUserDoc.uid ? "Kamu Menang! 🎉" : "Kamu Kalah! 😢";
+                    document.getElementById('tk-playing-phase').classList.add('hidden');
+                    document.getElementById('tk-final-phase').classList.add('hidden');
+                    document.getElementById('game-actions').classList.remove('hidden');
+                    document.getElementById('play-again-btn').classList.remove('hidden');
+                } else if(data.status === 'input_word') {
+                    document.getElementById('game-status-text').innerText = "Persiapan Kata";
+                    document.getElementById('tk-input-phase').classList.remove('hidden');
+                    document.getElementById('tk-playing-phase').classList.add('hidden');
+                    document.getElementById('tk-final-phase').classList.add('hidden');
+                    document.getElementById('game-actions').classList.add('hidden');
+                    
+                    const myWord = isPlayer1 ? data.word1 : data.word2;
+                    if(myWord) {
+                        document.getElementById('tk-input-phase').innerHTML = `<p class="text-indigo-600 font-bold">Menunggu lawan memasukkan kata...</p>`;
+                    } else {
+                        document.getElementById('tk-input-phase').innerHTML = `
+                            <h3 class="text-lg font-bold mb-2 text-gray-700">Masukkan Kata untuk Ditebak Lawan</h3>
+                            <input id="tk-word-input" type="text" class="w-full px-4 py-2 border border-gray-200 rounded-xl mb-3 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Kata Rahasia...">
+                            <button id="tk-submit-word-btn" class="bg-indigo-600 hover:bg-indigo-700 transition text-white px-4 py-2.5 rounded-xl font-bold w-full shadow-sm">Kirim</button>
+                        `;
+                        document.getElementById('tk-submit-word-btn').onclick = async () => {
+                            const w = document.getElementById('tk-word-input').value.trim();
+                            if(!w) return;
+                            
+                            const updateData = {};
+                            updateData[isPlayer1 ? 'word1' : 'word2'] = w;
+                            
+                            const otherWord = isPlayer1 ? data.word2 : data.word1;
+                            if(otherWord) {
+                                updateData.status = 'playing';
+                            }
+                            
+                            await updateDoc(doc(db, "tebakkata_games", gameId), updateData);
+                        };
+                    }
+                } else if(data.status === 'playing') {
+                    const isMyTurn = data.turn === currentUserDoc.uid;
+                    document.getElementById('game-status-text').innerText = isMyTurn ? "Giliranmu Menebak!" : "Giliran Lawan Menebak";
+                    document.getElementById('tk-input-phase').classList.add('hidden');
+                    document.getElementById('tk-playing-phase').classList.remove('hidden');
+                    document.getElementById('tk-playing-phase').classList.add('flex');
+                    document.getElementById('tk-final-phase').classList.add('hidden');
+                    
+                    const mySecret = isPlayer1 ? data.word1 : data.word2;
+                    document.getElementById('tk-my-secret-word').innerText = mySecret;
+
+                    document.getElementById('tk-guess-input').disabled = !isMyTurn;
+                    document.getElementById('tk-send-guess-btn').disabled = !isMyTurn;
+
+                    const myCount = isPlayer1 ? data.tebakLawanCount1 : data.tebakLawanCount2;
+                    if(isMyTurn && myCount < 2) {
+                        document.getElementById('tk-sudah-yakin-btn').classList.remove('hidden');
+                    } else {
+                        document.getElementById('tk-sudah-yakin-btn').classList.add('hidden');
+                    }
+
+                    if(!isMyTurn) {
+                        document.getElementById('tk-guess-input').placeholder = "Menunggu lawan...";
+                        document.getElementById('tk-send-guess-btn').classList.add('opacity-50', 'cursor-not-allowed');
+                    } else {
+                        document.getElementById('tk-guess-input').placeholder = "Tebak kata...";
+                        document.getElementById('tk-send-guess-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+                    }
+                } else if(data.status === 'tebak_lawan_pending') {
+                    document.getElementById('game-status-text').innerText = "Fase Tebak Lawan";
+                    document.getElementById('tk-input-phase').classList.add('hidden');
+                    document.getElementById('tk-playing-phase').classList.add('hidden');
+                    document.getElementById('tk-final-phase').classList.remove('hidden');
+                    
+                    if (data.turn === currentUserDoc.uid) {
+                        const myCount = isPlayer1 ? data.tebakLawanCount1 : data.tebakLawanCount2;
+                        if(myCount >= 2) {
+                            document.getElementById('tk-final-phase').innerHTML = `
+                                <p class="text-red-600 font-bold mb-3">Lawan berhasil menebak katamu, tapi kamu kehabisan jatah Tebak Kata Lawan!</p>
+                                <button id="tk-skip-final-btn" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-xl font-bold transition shadow-sm">Lanjut Main</button>
+                            `;
+                        } else {
+                            document.getElementById('tk-final-phase').innerHTML = `
+                                <p class="text-indigo-700 font-bold mb-3">Lawan berhasil menebak katamu! Sekarang giliranmu menebak kata lawan. (Sisa: ${2 - myCount})</p>
+                                <button id="tk-final-guess-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold transition shadow-sm">Tebak Kata Lawan</button>
+                                <button id="tk-skip-final-btn" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 mt-2 rounded-xl font-bold transition shadow-sm">Lewati</button>
+                            `;
+                        }
+                    } else {
+                        document.getElementById('tk-final-phase').innerHTML = `
+                            <p class="text-indigo-700 font-bold">Menunggu lawan menekan tombol...</p>
+                        `;
+                    }
+                } else if(data.status === 'tebak_lawan_active' || data.status === 'sudah_yakin_active') {
+                    document.getElementById('game-status-text').innerText = "Fase Tebak Lawan";
+                    document.getElementById('tk-input-phase').classList.add('hidden');
+                    document.getElementById('tk-playing-phase').classList.add('hidden');
+                    document.getElementById('tk-final-phase').classList.remove('hidden');
+                    
+                    if (data.turn === currentUserDoc.uid) {
+                        document.getElementById('tk-final-phase').innerHTML = `
+                            <p class="text-purple-700 font-bold mb-3">${data.status === 'sudah_yakin_active' ? `Lawan menebak kata rahasia mu: <span class="text-black font-extrabold">${data.currentSpecialGuess}</span>` : `Lawan menebak katamu`}</p>
+                            <div class="flex gap-3 justify-center">
+                                <button class="tk-final-eval-btn bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-xl font-bold transition" data-resp="Benar">Benar</button>
+                                <button class="tk-final-eval-btn bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-xl font-bold transition" data-resp="Salah">Salah</button>
+                            </div>
+                        `;
+                    } else {
+                        document.getElementById('tk-final-phase').innerHTML = `
+                            <p class="text-indigo-700 font-bold">Menunggu respon lawan...</p>
+                        `;
+                    }
+                } else if(data.status === 'tebak_lawan_result') {
+                    document.getElementById('game-status-text').innerText = "Hasil Tebakan Khusus";
+                    document.getElementById('tk-input-phase').classList.add('hidden');
+                    document.getElementById('tk-playing-phase').classList.add('hidden');
+                    document.getElementById('tk-final-phase').classList.remove('hidden');
+                    
+                    const oppSecret = isPlayer1 ? data.word2 : data.word1;
+                    
+                    if (data.finalResult === 'Salah') {
+                        if(data.turn === currentUserDoc.uid) {
+                            document.getElementById('tk-final-phase').innerHTML = `
+                                <p class="text-red-600 font-bold mb-2">Tebakan Salah!</p>
+                                <p class="text-gray-700 mb-3">Kata rahasia lawan adalah: <span class="font-extrabold text-indigo-700">${oppSecret}</span></p>
+                                <button id="tk-continue-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-xl font-bold transition shadow-sm">Lanjut Bermain</button>
+                            `;
+                        } else {
+                            document.getElementById('tk-final-phase').innerHTML = `
+                                <p class="text-green-600 font-bold mb-2">Mereka salah menebak!</p>
+                                <p class="text-gray-700 mb-3">Menunggu lawan melanjutkan...</p>
+                            `;
+                        }
+                    } else {
+                        document.getElementById('tk-final-phase').innerHTML = `
+                            <p class="text-green-600 font-bold mb-2">Tebakan Benar!</p>
+                        `;
+                        document.getElementById('game-actions').classList.remove('hidden');
+                        document.getElementById('play-again-btn').classList.remove('hidden');
+                    }
+                }
+            });
+
+            if(window.tkGuessesUnsubscribe) window.tkGuessesUnsubscribe();
+            window.tkGuessesUnsubscribe = onSnapshot(query(collection(db, "tebakkata_games", gameId, "guesses"), orderBy("timestamp", "asc")), (snap) => {
+                const myGuessesDiv = document.getElementById('tk-my-guesses');
+                const oppGuessesDiv = document.getElementById('tk-opp-guesses');
+                if(!myGuessesDiv || !oppGuessesDiv) return;
+                
+                myGuessesDiv.innerHTML = '';
+                oppGuessesDiv.innerHTML = '';
+                
+                let pendingOppGuessId = null;
+                
+                snap.forEach(docSnap => {
+                    const g = docSnap.data();
+                    const gId = docSnap.id;
+                    const isMyGuess = g.guesserUid === currentUserDoc.uid;
+                    
+                    let respText = g.response || 'Menunggu respon...';
+                    let respColor = g.response === 'Benar' ? 'text-green-600' : (g.response === 'Salah' ? 'text-red-500' : (g.response === 'Mungkin' ? 'text-yellow-600' : 'text-gray-400'));
+                    
+                    const html = `<div class="text-sm py-1.5 border-b border-gray-100"><span class="font-bold text-gray-700">${g.guess}</span> - <span class="${respColor} font-semibold">${respText}</span></div>`;
+                    
+                    if(isMyGuess) {
+                        myGuessesDiv.innerHTML += html;
+                    } else {
+                        oppGuessesDiv.innerHTML += html;
+                        if(!g.response) {
+                            pendingOppGuessId = gId;
+                        }
+                    }
+                });
+                
+                myGuessesDiv.scrollTop = myGuessesDiv.scrollHeight;
+                oppGuessesDiv.scrollTop = oppGuessesDiv.scrollHeight;
+                
+                const evalActions = document.getElementById('tk-eval-actions');
+                if(pendingOppGuessId) {
+                    evalActions.classList.remove('hidden');
+                    evalActions.dataset.guessId = pendingOppGuessId;
+                } else {
+                    evalActions.classList.add('hidden');
+                }
+            });
+        }
+
+        document.addEventListener('click', async (e) => {
+            if(e.target.id === 'tk-send-guess-btn') {
+                const input = document.getElementById('tk-guess-input');
+                const guess = input.value.trim();
+                if(!guess || !currentTKGameId) return;
+
+                if(currentTKGameData && currentTKGameData.turn !== currentUserDoc.uid) return;
+
+                input.value = '';
+                
+                await addDoc(collection(db, "tebakkata_games", currentTKGameId, "guesses"), {
+                    guesserUid: currentUserDoc.uid,
+                    guess: guess,
+                    response: null,
+                    timestamp: serverTimestamp()
+                });
+
+                const isPlayer1 = currentTKGameData.player1.uid === currentUserDoc.uid;
+                const oppUid = isPlayer1 ? currentTKGameData.player2.uid : currentTKGameData.player1.uid;
+                await updateDoc(doc(db, "tebakkata_games", currentTKGameId), {
+                    turn: oppUid
+                });
+            }
+            
+            if(e.target.classList.contains('tk-eval-btn')) {
+                const resp = e.target.getAttribute('data-resp');
+                const guessId = document.getElementById('tk-eval-actions').dataset.guessId;
+                if(!guessId || !currentTKGameId) return;
+                
+                await updateDoc(doc(db, "tebakkata_games", currentTKGameId, "guesses", guessId), {
+                    response: resp
+                });
+                
+                if(resp === 'Benar') {
+                    // Start Tebak Lawan flow instead of winning immediately
+                    await updateDoc(doc(db, "tebakkata_games", currentTKGameId), {
+                        status: 'tebak_lawan_pending',
+                        turn: currentUserDoc.uid // the one who clicked 'Benar'
+                    });
+                }
+            }
+            
+            if(e.target.id === 'tk-final-guess-btn') {
+                if(!currentTKGameId) return;
+                const isPlayer1 = currentTKGameData.player1.uid === currentUserDoc.uid;
+                const oppUid = isPlayer1 ? currentTKGameData.player2.uid : currentTKGameData.player1.uid;
+                
+                const updateData = {
+                    status: 'tebak_lawan_active',
+                    turn: oppUid
+                };
+                if(isPlayer1) updateData.tebakLawanCount1 = increment(1);
+                else updateData.tebakLawanCount2 = increment(1);
+
+                await updateDoc(doc(db, "tebakkata_games", currentTKGameId), updateData);
+            }
+
+            if(e.target.id === 'tk-skip-final-btn') {
+                if(!currentTKGameId) return;
+                const isPlayer1 = currentTKGameData.player1.uid === currentUserDoc.uid;
+                const oppUid = isPlayer1 ? currentTKGameData.player2.uid : currentTKGameData.player1.uid;
+                await updateDoc(doc(db, "tebakkata_games", currentTKGameId), {
+                    status: 'playing',
+                    turn: oppUid
+                });
+            }
+
+            if(e.target.id === 'tk-continue-btn') {
+                if(!currentTKGameId) return;
+                const isPlayer1 = currentTKGameData.player1.uid === currentUserDoc.uid;
+                const oppUid = isPlayer1 ? currentTKGameData.player2.uid : currentTKGameData.player1.uid;
+                await updateDoc(doc(db, "tebakkata_games", currentTKGameId), {
+                    status: 'playing',
+                    turn: oppUid
+                });
+            }
+            
+            if(e.target.classList.contains('tk-final-eval-btn')) {
+                const resp = e.target.getAttribute('data-resp');
+                if(!currentTKGameId) return;
+                
+                const isPlayer1 = currentTKGameData.player1.uid === currentUserDoc.uid;
+                const oppUid = isPlayer1 ? currentTKGameData.player2.uid : currentTKGameData.player1.uid;
+                
+                if(resp === 'Benar') {
+                    await updateDoc(doc(db, "tebakkata_games", currentTKGameId), {
+                        status: 'tebak_lawan_result',
+                        finalResult: 'Benar',
+                        winner: oppUid
+                    });
+                    await updateDoc(doc(db, "users", oppUid), { points: increment(2) });
+                } else {
+                    await updateDoc(doc(db, "tebakkata_games", currentTKGameId), {
+                        status: 'tebak_lawan_result',
+                        finalResult: 'Salah',
+                        turn: oppUid // So the guesser can see the result
+                    });
+                }
+            }
+
+            // Sudah Yakin Logic
+            if(e.target.id === 'tk-sudah-yakin-btn') {
+                document.getElementById('tk-sudah-yakin-modal').classList.remove('hidden');
+            }
+            if(e.target.id === 'cancel-sudah-yakin-btn') {
+                document.getElementById('tk-sudah-yakin-modal').classList.add('hidden');
+            }
+            if(e.target.id === 'send-sudah-yakin-btn') {
+                const w = document.getElementById('tk-sudah-yakin-input').value.trim();
+                if(!w || !currentTKGameId) return;
+                
+                const isPlayer1 = currentTKGameData.player1.uid === currentUserDoc.uid;
+                const oppUid = isPlayer1 ? currentTKGameData.player2.uid : currentTKGameData.player1.uid;
+
+                const updateData = {
+                    status: 'sudah_yakin_active',
+                    turn: oppUid,
+                    currentSpecialGuess: w
+                };
+                if(isPlayer1) updateData.tebakLawanCount1 = increment(1);
+                else updateData.tebakLawanCount2 = increment(1);
+
+                await updateDoc(doc(db, "tebakkata_games", currentTKGameId), updateData);
+                document.getElementById('tk-sudah-yakin-modal').classList.add('hidden');
+                document.getElementById('tk-sudah-yakin-input').value = '';
+            }
+        });
+
+        document.getElementById('tk-guess-input')?.addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') {
+                if(currentTKGameData && currentTKGameData.turn !== currentUserDoc.uid) return;
+                document.getElementById('tk-send-guess-btn').click();
+            }
+        });
+
+    </script>
+</body>
+</html>
