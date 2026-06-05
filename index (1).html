@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MamanWeb - Birthday Countdown Gemoy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: linear-gradient(135deg, #fff5f7 0%, #ffe4e6 100%); min-height: 100vh; overflow-x: hidden; }
+        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.5); z-index: 10; position: relative; }
+        .cute-shadow { box-shadow: 0 20px 40px -10px rgba(219, 39, 119, 0.2); }
+        .hidden-section { display: none; }
+        .heart-float { animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        
+        /* Animasi Mengambang di Background */
+        @keyframes floatBg {
+            0% { transform: translateY(110vh) rotate(0deg) scale(0.6); opacity: 0; }
+            15% { opacity: 0.8; }
+            85% { opacity: 0.8; }
+            100% { transform: translateY(-15vh) rotate(360deg) scale(1.3); opacity: 0; }
+        }
+        .bg-float-element {
+            position: absolute;
+            bottom: -10vh;
+            animation: floatBg 12s linear infinite;
+            pointer-events: none;
+            z-index: 1;
+            user-select: none;
+        }
+
+        /* Animasi Angka Berubah */
+        @keyframes popNumber {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.35); color: #ec4899; }
+            100% { transform: scale(1); }
+        }
+        .animate-pop {
+            animation: popNumber 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: inline-block;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4 min-h-screen relative">
+
+    <!-- Background Animations Container -->
+    <div id="bg-animation-container" class="fixed inset-0 pointer-events-none overflow-hidden z-0"></div>
+
+    <!-- Floating Music Button -->
+    <div class="fixed top-4 right-4 z-50">
+        <button id="music-btn" onclick="toggleMusic()" class="glass p-3 rounded-full cute-shadow flex items-center justify-center hover:scale-110 active:scale-95 transition-all text-pink-500 bg-white/80">
+            <i data-lucide="volume-x" class="w-6 h-6 text-pink-400"></i>
+        </button>
+    </div>
+
+    <!-- Form Input -->
+    <div id="setup-page" class="w-full max-w-md glass p-8 rounded-3xl cute-shadow animate__animated animate__fadeInUp">
+        <div class="text-center mb-8">
+            <i data-lucide="sparkles" class="w-12 h-12 text-pink-500 mx-auto mb-2 heart-float"></i>
+            <h1 class="text-3xl font-extrabold text-pink-600">MamanWeb</h1>
+            <p class="text-pink-400 text-sm">Hitung mundur ulang tahun berikutnya</p>
+        </div>
+        
+        <div class="space-y-4">
+            <input type="text" id="name" placeholder="Nama penerima..." class="w-full p-4 rounded-2xl border-2 border-pink-100 focus:border-pink-500 outline-none transition-all">
+            
+            <div class="grid grid-cols-2 gap-2">
+                <input type="number" id="day" placeholder="Tanggal (e.g. 15)" class="p-4 rounded-2xl border-2 border-pink-100 outline-none focus:border-pink-500">
+                <input type="number" id="month" placeholder="Bulan (1-12)" class="p-4 rounded-2xl border-2 border-pink-100 outline-none focus:border-pink-500">
+            </div>
+
+            <div class="relative">
+                <label class=
