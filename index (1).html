@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MamanWeb - Birthday Countdown Gemoy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: linear-gradient(135deg, #fff5f7 0%, #ffe4e6 100%); min-height: 100vh; }
+        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.5); }
+        .cute-shadow { box-shadow: 0 20px 40px -10px rgba(219, 39, 119, 0.2); }
+        .hidden-section { display: none; }
+        .heart-float { animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        
+        /* Animasi kustom untuk perubahan angka hitung mundur */
+        @keyframes num-pop {
+            0% { transform: scale(0.8); opacity: 0.6; color: #db2777; }
+            50% { transform: scale(1.15); color: #ec4899; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .num-changed {
+            animation: num-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: inline-block;
+        }
+    </style>
+</head>
+<body class=
