@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MamanWeb - Countdown Spesial & Kado Kejutan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: linear-gradient(-45deg, #ffe4e6, #fecdd3, #fbcfe8, #fae8ff);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh; 
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass { 
+            background: rgba(255, 255, 255, 0.75); 
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6); 
+        }
+
+        .glass-dark {
+            background: rgba(244, 63, 94, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(244, 63, 94, 0.2);
+        }
+
+        .cute-shadow { 
+            box-shadow: 0 20px 50px -15px rgba(219, 39, 119, 0.15); 
+        }
+
+        .nav-shadow {
+            box-shadow: 0 -10px 30px -5px rgba(219, 39, 119, 0.1);
+        }
+
+        .hidden-section { 
+            display: none !important; 
+        }
+
+        /* High performance animations */
+        .float-slow { 
+            animation: float 6s ease-in-out infinite; 
+            will-change: transform;
+        }
+
+        .pulse-slow {
+            animation: pulse 3s ease-in-out infinite;
+            will-change: transform, opacity;
+        }
+
+        @keyframes float { 
+            0%, 100% { transform: translateY(0) rotate(0deg); } 
+            50% { transform: translateY(-12px) rotate(3deg); } 
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.03); opacity: 1; }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(219, 39, 119, 0.3);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(219, 39, 119, 0.5);
+        }
+
+        /* Active Navigation Tab Style */
+        .active-tab {
+            color: #db2777 !important;
+            transform: translateY(-4px);
+        }
+        .active-tab .tab-icon {
+            background-color: #fce7f3;
+            color: #db2777;
+            transform: scale(1.1);
+        }
+
+        /* Gift box animations */
+        .gift-bounce {
+            animation: giftBounce 1.5s infinite alternate;
+        }
+        @keyframes giftBounce {
+            0% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(-15px) scale(1.05); }
+        }
+
+        /* Sparkle particles */
+        .sparkle-particle {
+            position: absolute;
+            pointer-events: none;
+            animation: explode 1.2s ease-out forwards;
+        }
+        @keyframes explode {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+
+        /* Interactive Bubbles */
+        .bubble {
+            position: absolute;
+            bottom: -100px;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4) 0%, rgba(244, 63, 94, 0.15) 60%, rgba(219, 39, 119, 0.35) 100%);
+            border: 1.5px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            box-shadow: inset -5px -5px 12px rgba(0, 0, 0, 0.05), inset 3px 3px 10px rgba(255, 255, 255, 0.6), 0 5px 15px rgba(219, 39, 119, 0.1);
+            cursor: pointer;
+            z-index: 5;
+            animation: floatUp var(--speed) linear forwards;
+            will-change: transform, opacity;
+        }
+        .bubble::after {
+            content: '';
+            position: absolute;
+            top: 15%;
+            left: 15%;
+            width: 25%;
+            height: 25%;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+        }
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) translateX(0) scale(0.8);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.85;
+            }
+            90% {
+                opacity: 0.85;
+            }
+            100% {
+                transform: translateY(-115vh) translateX(var(--drift)) scale(1.15);
+                opacity: 0;
+            }
+        }
+
+        .pop-particle {
+            position: absolute;
+            pointer-events: none;
+            border-radius: 50%;
+            animation: popParticleAnim 0.4s ease-out forwards;
+            will-change: transform, opacity;
+            z-index: 6;
+        }
+        @keyframes popParticleAnim {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4 pb-32 md:pb-32">
+
+    <!-- Decorative Floating Elements -->
+    <div class="fixed top-12 left-12 text-pink-300 pointer-events-none float-slow z-0 opacity-60">
+        <i data-lucide="sparkles" class="w-10 h-10"></i>
+    </div>
+    <div class="fixed bottom-24 right-12 text-purple-300 pointer-events-none float-slow z-0 opacity-60" style="animation-delay: 2s;">
+        <i data-lucide="heart" class="w-12 h-12 fill-purple-100"></i>
+    </div>
+    <div class="fixed top-1/3 right-16 text-rose-300 pointer-events-none float-slow z-0 opacity-50" style="animation-delay: 4s;">
+        <i data-lucide="cake" class="w-8 h-8"></i>
+    </div>
+
+    <!-- Main Container App -->
+    <main class="w-full max-w-md z-10">
+
+        <!-- ================= PAGE 1: AUTHENTICATION ================= -->
+        <div id="auth-page" class="w-full glass p-8 rounded-[2.5rem] cute-shadow animate__animated animate__fadeInUp">
+            <div class="text-center mb-6">
+                <div class="w-20 h-20 bg-gradient-to-tr from-pink-400 to-rose-500 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-pink-200 float-slow">
+                    <i data-lucide="lock" class="w-10 h-10 text-white"></i>
+                </div>
+                <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-rose-600">MamanWeb</h1>
+                <p id="auth-subtitle" class="text-pink-500 text-sm font-medium mt-1">Silakan Daftarkan Akun Terlebih Dahulu ✨</p>
+            </div>
+
+            <!-- Authentic Tab Switcher (Daftar / Masuk) -->
+            <div class="flex bg-pink-100/50 p-1.5 rounded-2xl mb-5">
+                <button id="tab-btn-register" onclick="window.setAuthMode('register')" class="flex-1 py-2.5 text-xs font-bold rounded-xl transition-all text-pink-600 bg-white shadow-sm">Daftar Akun</button>
+                <button id="tab-btn-login" onclick="window.setAuthMode('login')" class="flex-1 py-2.5 text-xs font-bold rounded-xl transition-all text-pink-400">Masuk</button>
+            </div>
+
+            <div id="auth-helper-text" class="mb-4 text-xs bg-pink-100/60 text-pink-700 px-3 py-2.5 rounded-xl text-center font-medium">
+                Buat akun barumu di bawah ini. Setelah mendaftar, kamu baru bisa masuk ke aplikasi!
+            </div>
+            
+            <form id="auth-form" onsubmit="window.handleAuth(event)" class="space-y-4" autocomplete="off">
+                <!-- Username Field -->
+                <div id="field-username">
+                    <label class="block text-xs font-bold text-pink-500 mb-1.5 ml-1 uppercase tracking-wider">Username</label>
+                    <div class="relative">
+                        <i data-lucide="user" class="absolute left-4 top-3.5 w-5 h-5 text-pink-400"></i>
+                        <input type="text" id="auth-username" required placeholder="Masukkan username pilihanmu..." autocomplete="new-password" class="w-full pl-12 pr-4 py-3.5 rounded-2xl border-2 border-pink-100 focus:border-pink-400 focus:ring-2 focus:ring-pink-100 outline-none bg-white/80 transition-all text-pink-700">
+                    </div>
+                </div>
+
+                <!-- Fullname Field (Only shown in register mode) -->
+                <div id="field-fullname">
+                    <label class="block text-xs font-bold text-pink-500 mb-1.5 ml-1 uppercase tracking-wider">Nama Lengkap</label>
+                    <div class="relative">
+                        <i data-lucide="smile" class="absolute left-4 top-3.5 w-5 h-5 text-pink-400"></i>
+                        <input type="text" id="auth-fullname" placeholder="Masukkan nama lengkap..." autocomplete="new-password" class="w-full pl-12 pr-4 py-3.5 rounded-2xl border-2 border-pink-100 focus:border-pink-400 focus:ring-2 focus:ring-pink-100 outline-none bg-white/80 transition-all text-pink-700">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-pink-500 mb-1.5 ml-1 uppercase tracking-wider">Kata Sandi</label>
+                    <div class="relative">
+                        <i data-lucide="key-round" class="absolute left-4 top-3.5 w-5 h-5 text-pink-400"></i>
+                        <input type="password" id="auth-password" required placeholder="Masukkan sandi..." autocomplete="new-password" class="w-full pl-12 pr-4 py-3.5 rounded-2xl border-2 border-pink-100 focus:border-pink-400 focus:ring-2 focus:ring-pink-100 outline-none bg-white/80 transition-all text-pink-700">
+                    </div>
+                </div>
+
+                <button type="submit" id="auth-submit-btn" class="w-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold py-4 rounded-2xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-pink-200 mt-6 flex items-center justify-center gap-2">
+                    <span id="auth-btn-text">Daftar Sekarang</span>
+                    <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                </button>
+            </form>
+        </div>
+
+
+        <!-- ================= PAGE 2: SETUP TIMER ================= -->
+        <div id="setup-page" class="hidden-section w-full glass p-8 rounded-[2.5rem] cute-shadow animate__animated animate__fadeIn pb-12">
+            <div class="text-center mb-6">
+                <div class="relative inline-block">
+                    <i data-lucide="sparkles" class="w-12 h-12 text-pink-500 mx-auto mb-2 float-slow"></i>
+                    <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-pink-500"></span>
+                    </span>
+                </div>
+                <h1 class="text-2xl font-extrabold text-pink-600">Konfigurasi Hari Spesial</h1>
+                <p class="text-pink-400 text-sm">Atur hitung mundur hari ulang tahunmu</p>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-pink-500 mb-1 ml-1 uppercase tracking-wider">Nama Lengkap</label>
+                    <input type="text" id="name" placeholder="Nama kamu..." autocomplete="off" class="w-full p-4 rounded-2xl border-2 border-pink-100 focus:border-pink-500 outline-none transition-all bg-white/80 text-pink-700 font-medium">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-pink-500 mb-1 ml-1 uppercase tracking-wider">Tanggal</label>
+                        <input type="number" id="day" placeholder="Contoh: 15" min="1" max="31" autocomplete="off" class="w-full p-4 rounded-2xl border-2 border-pink-100 outline-none focus:border-pink-500 bg-white/80 text-pink-700 font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-pink-500 mb-1 ml-1 uppercase tracking-wider">Bulan</label>
+                        <select id="month" class="w-full p-4 rounded-2xl border-2 border-pink-100 outline-none focus:border-pink-500 bg-white/80 text-pink-700 font-medium appearance-none cursor-pointer">
+                            <option value="1">Januari</option>
+                            <option value="2">Februari</option>
+                            <option value="3">Maret</option>
+                            <option value="4">April</option>
+                            <option value="5">Mei</option>
+                            <option value="6">Juni</option>
+                            <option value="7">Juli</option>
+                            <option value="8">Agustus</option>
+                            <option value="9">September</option>
+                            <option value="10">Oktober</option>
+                            <option value="11">November</option>
+                            <option value="12">Desember</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Manual Time Configuration (Adjustable manually) -->
+                <div>
+                    <label class="block text-xs font-bold text-pink-500 mb-1 ml-1 uppercase tracking-wider">Jam Peringatan (Masukkan Manual)</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="relative">
+                            <input type="number" id="manual-hour" placeholder="Jam (0-23)" min="0" max="23" autocomplete="off" class="w-full p-4 rounded-2xl border-2 border-pink-100 outline-none focus:border-pink-500 bg-white/80 text-pink-700 font-medium">
+                            <span class="absolute right-4 top-4 text-xs font-bold text-pink-300 pointer-events-none">Jam</span>
+                        </div>
+                        <div class="relative">
+                            <input type="number" id="manual-minute" placeholder="Menit (0-59)" min="0" max="59" autocomplete="off" class="w-full p-4 rounded-2xl border-2 border-pink-100 outline-none focus:border-pink-500 bg-white/80 text-pink-700 font-medium">
+                            <span class="absolute right-4 top-4 text-xs font-bold text-pink-300 pointer-events-none">Min</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-pink-500 mb-1 ml-1 uppercase tracking-wider">Pesan Rahasia (Hanya Terbuka Saat Countdown Selesai)</label>
+                    <textarea id="message" placeholder="Tulis harapan terbaikmu di sini..." autocomplete="off" class="w-full p-4 rounded-2xl border-2 border-pink-100 focus:border-pink-500 outline-none h-24 bg-white/80 text-pink-700 font-medium resize-none"></textarea>
+                </div>
+                
+                <!-- Added margin bottom to fix the button covered by bottom navigation issue -->
+                <div class="pt-2 pb-8">
+                    <button onclick="window.startTimer()" class="w-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold py-4 rounded-2xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-pink-200 flex items-center justify-center gap-2">
+                        <span>Mulai Hitung Mundur! 🎈</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ================= PAGE 3: LIVE TIMER ================= -->
+        <div id="timer-page" class="hidden-section w-full glass p-8 rounded-[2.5rem] cute-shadow text-center animate__animated animate__zoomIn">
+            <div class="inline-flex items-center justify-center p-3 bg-pink-100 rounded-full text-pink-500 mb-4 pulse-slow">
+                <i data-lucide="gift" class="w-8 h-8"></i>
+            </div>
+            
+            <h2 id="display-name" class="text-2xl font-extrabold text-pink-700 mb-2 leading-tight"></h2>
+            <p class="text-pink-400 text-xs font-semibold uppercase tracking-widest mb-6">Hitung Mundur Ulang Tahun</p>
+            
+            <!-- Countdown Grid -->
+            <div id="timer" class="grid grid-cols-4 gap-2.5 mb-8">
+                <div class="bg-white/80 p-3 rounded-2xl border border-pink-100/50 shadow-sm">
+                    <span id="days" class="block text-2xl font-extrabold text-pink-600">0</span>
+                    <small class="text-[10px] uppercase font-bold text-pink-400 tracking-wider">Hari</small>
+                </div>
+                <div class="bg-white/80 p-3 rounded-2xl border border-pink-100/50 shadow-sm">
+                    <span id="hours" class="block text-2xl font-extrabold text-pink-600">0</span>
+                    <small class="text-[10px] uppercase font-bold text-pink-400 tracking-wider">Jam</small>
+                </div>
+                <div class="bg-white/80 p-3 rounded-2xl border border-pink-100/50 shadow-sm">
+                    <span id="minutes" class="block text-2xl font-extrabold text-pink-600">0</span>
+                    <small class="text-[10px] uppercase font-bold text-pink-400 tracking-wider">Menit</small>
+                </div>
+                <div class="bg-white/80 p-3 rounded-2xl border border-pink-100/50 shadow-sm">
+                    <span id="seconds" class="block text-2xl font-extrabold text-rose-500 animate-pulse">0</span>
+                    <small class="text-[10px] uppercase font-bold text-pink-400 tracking-wider">Detik</small>
+                </div>
+            </div>
+
+            <!-- Lock Info (Text is locked) -->
+            <div id="lock-indicator" class="bg-pink-50 border border-pink-100 p-4 rounded-2xl mb-6">
+                <div class="flex items-center justify-center gap-2 text-pink-600 font-bold text-sm mb-1">
+                    <i data-lucide="lock" class="w-4 h-4"></i>
+                    <span>Pesan Spesial Terkunci</span>
+                </div>
+                <p class="text-xs text-pink-500">Pesan dan hadiah spesialmu hanya akan terbuka secara otomatis setelah hitung mundur selesai!</p>
+            </div>
+
+            <!-- Congratulation Box (Initially Hidden until gift opened) -->
+            <div id="message-display" class="hidden animate__animated animate__bounceIn bg-white/95 p-6 rounded-3xl border-2 border-pink-200 shadow-inner italic text-pink-900 leading-relaxed font-semibold relative overflow-hidden mb-6">
+                <div class="absolute -top-4 -right-4 w-12 h-12 bg-pink-100 rounded-full opacity-50"></div>
+                <div class="absolute -bottom-4 -left-4 w-12 h-12 bg-rose-100 rounded-full opacity-50"></div>
+                <p id="congrats-text" class="relative z-10 mb-4"></p>
+                
+                <!-- Selesai Makasih Dev Button to Reset Layout / Unresponsiveness -->
+                <button onclick="window.finishAndReset()" class="relative z-10 w-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold py-3.5 rounded-2xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-pink-200 flex items-center justify-center gap-2 text-xs not-italic">
+                    <span>Selesai, makasih dev! ❤️</span>
+                </button>
+            </div>
+
+            <!-- Wishes received from friends -->
+            <div class="text-left bg-white/60 p-4 rounded-2xl border border-pink-100/50 mb-6">
+                <div class="flex items-center gap-2 text-pink-600 font-bold text-xs mb-2">
+                    <i data-lucide="message-circle" class="w-4 h-4"></i>
+                    <span>Ucapan dari Teman</span>
+                </div>
+                <div id="wishes-list" class="space-y-2 max-h-40 overflow-y-auto pr-1 text-xs text-pink-700">
+                    <p class="text-pink-400 italic">Belum ada ucapan masuk. Cari temanmu dan saling berkirim ucapan!</p>
+                </div>
+            </div>
+
+            <!-- Admin Messages received -->
+            <div id="admin-messages-box" class="hidden text-left bg-purple-50 p-4 rounded-2xl border border-purple-100 mb-6">
+                <div class="flex items-center gap-2 text-purple-600 font-bold text-xs mb-2">
+                    <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                    <span>Pesan dari Admin</span>
+                </div>
+                <div id="admin-messages-list" class="space-y-2 text-xs text-purple-800">
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ================= PAGE 7: GROUP CHAT ================= -->
+        <div id="chat-page" class="hidden-section w-full glass p-6 rounded-[2.5rem] cute-shadow animate__animated animate__fadeIn flex flex-col h-[520px]">
+            <div class="text-center mb-4 pb-3 border-b border-pink-100/80 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="relative flex h-2.5 w-2.5">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                    <h2 class="text-sm font-bold text-pink-700 uppercase tracking-wider">Grup Chat MamanWeb</h2>
+                </div>
+                <span class="text-[10px] bg-pink-100 text-pink-600 px-2.5 py-0.5 rounded-full font-bold">Live Chat</span>
+            </div>
+
+            <!-- Messages Stream -->
+            <div id="chat-messages" class="flex-1 overflow-y-auto space-y-3 pr-1 mb-4 flex flex-col">
+                <!-- Populated dynamically via JS -->
+                <p class="text-center text-pink-400 text-xs py-12 italic">Mulai percakapan seru di grup chat...</p>
+            </div>
+
+            <!-- Form input message -->
+            <form id="chat-form" onsubmit="window.sendChatMessage(event)" class="flex gap-2">
+                <input type="text" id="chat-input" placeholder="Ketik pesan manismu di sini..." autocomplete="off" class="flex-1 px-4 py-3 rounded-2xl border-2 border-pink-100 focus:border-pink-400 outline-none text-xs text-pink-700 bg-white/80 font-medium">
+                <button type="submit" class="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white p-3.5 rounded-2xl transition-all shadow-md shadow-pink-200 active:scale-95 flex items-center justify-center">
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                </button>
+            </form>
+        </div>
+
+
+        <!-- ================= PAGE 4: CARI USER ================= -->
+        <div id="search-page" class="hidden-section w-full glass p-8 rounded-[2.5rem] cute-shadow animate__animated animate__fadeIn">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i data-lucide="search" class="w-8 h-8 text-pink-500"></i>
+                </div>
+                <h2 class="text-2xl font-extrabold text-pink-700">Cari Pengguna</h2>
+                <p class="text-pink-400 text-sm">Temukan teman & kirimkan ucapan spesial!</p>
+            </div>
+
+            <div class="relative mb-6">
+                <i data-lucide="search" class="absolute left-4 top-3.5 w-5 h-5 text-pink-400"></i>
+                <input type="text" id="search-input" oninput="window.filterUsers()" placeholder="Cari berdasarkan username..." class="w-full pl-12 pr-4 py-3 rounded-2xl border-2 border-pink-100 focus:border-pink-400 outline-none bg-white/80 text-pink-700">
+            </div>
+
+            <div id="users-list" class="space-y-3 max-h-80 overflow-y-auto pr-1">
+                <!-- Loaded dynamically -->
+                <p class="text-center text-pink-400 text-sm py-4">Memuat data pengguna...</p>
+            </div>
+        </div>
+
+
+        <!-- ================= PAGE 5: PROFILE & SETTINGS ================= -->
+        <div id="profile-page" class="hidden-section w-full glass p-8 rounded-[2.5rem] cute-shadow animate__animated animate__fadeIn">
+            <div class="text-center mb-6">
+                <div class="w-20 h-20 bg-gradient-to-tr from-purple-400 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-pink-200">
+                    <i data-lucide="user" class="w-10 h-10 text-white"></i>
+                </div>
+                <h2 class="text-2xl font-extrabold text-pink-700 font-bold">Profil Pengguna</h2>
+                <p id="profile-username" class="text-pink-400 text-sm font-semibold truncate px-4">@username</p>
+            </div>
+
+            <div class="space-y-4">
+                <div class="bg-white/60 p-4 rounded-2xl border border-pink-100/50">
+                    <span class="block text-xs text-pink-400 font-bold uppercase tracking-wider mb-1">Status Akun</span>
+                    <div class="flex items-center gap-2 text-emerald-600 font-bold text-sm">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Terverifikasi Aktif
+                    </div>
+                </div>
+
+                <div class="bg-white/60 p-4 rounded-2xl border border-pink-100/50">
+                    <span class="block text-xs text-pink-400 font-bold uppercase tracking-wider mb-1">Kata Mutiara Hari Ini</span>
+                    <p class="text-xs text-pink-700 italic leading-relaxed">"Setiap hari adalah kesempatan baru untuk tumbuh, bermimpi lebih tinggi, dan tersenyum lebih lebar." ✨</p>
+                </div>
+
+                <div class="pt-4 space-y-2">
+                    <button onclick="window.resetTimer()" class="w-full bg-pink-100 hover:bg-pink-200 text-pink-600 font-bold py-3.5 rounded-2xl transition-all flex items-center justify-center gap-2 text-sm">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                        Hapus Data Countdown
+                    </button>
+                    <button onclick="window.logout()" class="w-full bg-rose-50 hover:bg-rose-100 text-rose-500 font-bold py-3.5 rounded-2xl transition-all flex items-center justify-center gap-2 text-sm">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                        Keluar dari Akun
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ================= PAGE 6: ADMIN DASHBOARD (/#admin) ================= -->
+        <div id="admin-page" class="hidden-section w-full glass p-8 rounded-[2.5rem] cute-shadow animate__animated animate__fadeIn">
+            <div class="text-center mb-6 relative">
+                <button onclick="window.logoutAdmin()" class="absolute left-0 top-0 text-purple-500 hover:text-purple-700 bg-purple-100/50 p-2 rounded-xl transition-all">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                </button>
+                <div class="w-16 h-16 bg-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+                    <i data-lucide="shield" class="w-8 h-8 text-white"></i>
+                </div>
+                <h2 class="text-2xl font-extrabold text-purple-800">Admin Dashboard</h2>
+                <p class="text-purple-500 text-sm">Kelola pengguna & kirim pesan sistem</p>
+            </div>
+
+            <!-- Admin Authentication (Strictly checked with specified Gmail & Password) -->
+            <div id="admin-auth-box" class="space-y-4">
+                <div class="bg-purple-50 p-4 rounded-2xl border border-purple-100 text-xs text-purple-700 text-center font-semibold">
+                    Silakan masuk menggunakan akun Admin resmi.
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-purple-600 mb-1.5 ml-1 uppercase tracking-wider">Gmail Admin</label>
+                    <div class="relative">
+                        <i data-lucide="mail" class="absolute left-4 top-3.5 w-5 h-5 text-purple-400"></i>
+                        <input type="email" id="admin-email-input" required placeholder="mamansukamieayam@gmail.com" class="w-full pl-12 pr-4 py-3.5 rounded-2xl border-2 border-purple-100 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none bg-white transition-all text-purple-700">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-purple-600 mb-1.5 ml-1 uppercase tracking-wider">Kata Sandi</label>
+                    <div class="relative">
+                        <i data-lucide="key-round" class="absolute left-4 top-3.5 w-5 h-5 text-purple-400"></i>
+                        <input type="password" id="admin-pass-input" required placeholder="••••••••" class="w-full pl-12 pr-4 py-3.5 rounded-2xl border-2 border-purple-100 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none bg-white transition-all text-purple-700">
+                    </div>
+                </div>
+                <button onclick="window.verifyAdmin()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-2xl transition-all shadow-lg flex items-center justify-center gap-2">
+                    <span>Masuk Sebagai Admin</span>
+                    <i data-lucide="shield-check" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Admin Panel Content (Hidden until verified) -->
+            <div id="admin-panel-content" class="hidden space-y-6">
+                <!-- Send Global/User Message -->
+                <div class="bg-white/80 p-5 rounded-2xl border border-purple-100">
+                    <h3 class="text-sm font-bold text-purple-700 mb-3 flex items-center gap-1">
+                        <i data-lucide="send" class="w-4 h-4"></i> Kirim Pesan Khusus
+                    </h3>
+                    <div class="space-y-3 text-xs">
+                        <input type="text" id="admin-msg-target" placeholder="Username Target (contoh: maman)" class="w-full p-3 rounded-xl border border-purple-100 outline-none focus:border-purple-500">
+                        <textarea id="admin-msg-text" placeholder="Tulis isi pesan admin..." class="w-full p-3 rounded-xl border border-purple-100 outline-none h-20 resize-none focus:border-purple-500"></textarea>
+                        <button onclick="window.sendAdminMessage()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 rounded-xl transition-all">
+                            Kirim Pesan
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Users List for deletion -->
+                <div class="bg-white/80 p-5 rounded-2xl border border-purple-100">
+                    <h3 class="text-sm font-bold text-purple-700 mb-3 flex items-center gap-1">
+                        <i data-lucide="users" class="w-4 h-4"></i> Daftar Pengguna Aktif
+                    </h3>
+                    <div id="admin-users-list" class="space-y-2 max-h-60 overflow-y-auto text-xs">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ================= CELEBRATION HISTORY BAR ================= -->
+    <div class="w-full max-w-md mt-6 glass p-5 rounded-3xl cute-shadow z-10 text-center">
+        <h3 class="text-xs font-bold text-pink-600 uppercase tracking-wider mb-3 flex items-center justify-center gap-1">
+            <i data-lucide="history" class="w-4 h-4"></i> Riwayat Perayaan Terbaru
+        </h3>
+        <div id="celebration-history-list" class="space-y-2 text-xs text-pink-700 max-h-32 overflow-y-auto pr-1">
+            <p class="text-pink-400 italic">Belum ada perayaan yang tercatat.</p>
+        </div>
+    </div>
+
+
+    <!-- ================= CUTE POPUP / MODAL GIFT ================= -->
+    <div id="gift-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass max-w-sm w-full p-8 rounded-[2.5rem] text-center cute-shadow animate__animated animate__zoomIn relative overflow-hidden">
+            <!-- Sparkle container for particles -->
+            <div id="sparkle-container" class="absolute inset-0 pointer-events-none"></div>
+
+            <div class="relative z-10">
+                <h2 id="gift-modal-title" class="text-2xl font-extrabold text-pink-600 mb-2">Hore, Countdown Selesai! 🎉</h2>
+                <p class="text-pink-500 text-sm mb-6">Ada kado spesial menantimu. Ketuk kado di bawah untuk membukanya!</p>
+                
+                <!-- Bouncing Gift Icon -->
+                <button id="gift-box-btn" onclick="window.openGift()" class="inline-block focus:outline-none gift-bounce transform transition-all duration-500 hover:scale-110 my-6">
+                    <div class="w-32 h-32 bg-gradient-to-tr from-pink-400 to-rose-500 rounded-3xl flex items-center justify-center shadow-2xl shadow-pink-300 relative">
+                        <i data-lucide="gift" class="w-16 h-16 text-white animate-pulse"></i>
+                        <span class="absolute -top-2 -right-2 bg-yellow-400 text-pink-900 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-md">Buka</span>
+                    </div>
+                </button>
+
+                <!-- Secret Message Container (hidden until opened) -->
+                <div id="gift-secret-message" class="hidden mt-4 p-5 bg-white/95 rounded-2xl border-2 border-pink-200 text-left relative">
+                    <h4 class="text-xs font-bold text-pink-600 uppercase tracking-widest mb-1">💌 Pesan Spesial Untukmu:</h4>
+                    <p id="gift-secret-text" class="text-sm font-semibold text-pink-800 italic leading-relaxed mb-4"></p>
+                    
+                    <!-- Added Selesai Makasih Dev Button inside modal text reveal -->
+                    <button onclick="window.finishAndReset()" class="w-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold py-3 rounded-xl text-xs transition-all shadow-md flex items-center justify-center gap-1">
+                        <span>Selesai, makasih dev! ❤️</span>
+                    </button>
+                </div>
+
+                <div class="mt-6 flex justify-center gap-2">
+                    <button onclick="window.closeGiftModal()" class="bg-pink-100 hover:bg-pink-200 text-pink-600 font-bold px-6 py-2.5 rounded-xl text-xs transition-all">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================= SEND WISH MODAL ================= -->
+    <div id="wish-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass max-w-sm w-full p-6 rounded-3xl text-center cute-shadow animate__animated animate__zoomIn">
+            <h3 class="text-lg font-bold text-pink-600 mb-2">Kirim Ucapan</h3>
+            <p id="wish-modal-target-desc" class="text-xs text-pink-500 mb-4"></p>
+            
+            <input type="hidden" id="wish-target-username">
+            <textarea id="wish-message-input" placeholder="Tulis ucapan selamat ulang tahun atau harapan terbaikmu..." class="w-full p-3 rounded-2xl border-2 border-pink-100 focus:border-pink-500 outline-none h-28 resize-none text-sm text-pink-700 bg-white/80 mb-4"></textarea>
+            
+            <div class="flex gap-2">
+                <button onclick="window.closeWishModal()" class="flex-1 bg-pink-100 text-pink-600 font-bold py-2.5 rounded-xl text-xs">Batal</button>
+                <button onclick="window.sendWishSubmit()" class="flex-1 bg-pink-500 text-white font-bold py-2.5 rounded-xl text-xs">Kirim Ucapan 🚀</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================= FLOATING BOTTOM NAVBAR ================= -->
+    <nav id="bottom-nav" class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[95%] max-w-md glass rounded-3xl py-3 px-2 nav-shadow flex justify-around items-center z-50 transition-all duration-500 transform translate-y-32">
+        <button id="nav-btn-timer" onclick="window.switchTab('timer')" class="flex flex-col items-center gap-1 text-pink-400 hover:text-pink-600 transition-all">
+            <div class="tab-icon p-2 rounded-xl transition-all duration-300">
+                <i data-lucide="clock" class="w-5 h-5"></i>
+            </div>
+            <span class="text-[9px] font-bold tracking-wider">Countdown</span>
+        </button>
+
+        <button id="nav-btn-setup" onclick="window.switchTab('setup')" class="flex flex-col items-center gap-1 text-pink-400 hover:text-pink-600 transition-all">
+            <div class="tab-icon p-2 rounded-xl transition-all duration-300">
+                <i data-lucide="calendar-plus" class="w-5 h-5"></i>
+            </div>
+            <span class="text-[9px] font-bold tracking-wider">Atur Baru</span>
+        </button>
+
+        <!-- Group Chat Tab Button -->
+        <button id="nav-btn-chat" onclick="window.switchTab('chat')" class="flex flex-col items-center gap-1 text-pink-400 hover:text-pink-600 transition-all">
+            <div class="tab-icon p-2 rounded-xl transition-all duration-300">
+                <i data-lucide="messages-square" class="w-5 h-5"></i>
+            </div>
+            <span class="text-[9px] font-bold tracking-wider">Grup Chat</span>
+        </button>
+
+        <button id="nav-btn-search" onclick="window.switchTab('search')" class="flex flex-col items-center gap-1 text-pink-400 hover:text-pink-600 transition-all">
+            <div class="tab-icon p-2 rounded-xl transition-all duration-300">
+                <i data-lucide="search" class="w-5 h-5"></i>
+            </div>
+            <span class="text-[9px] font-bold tracking-wider">Cari User</span>
+        </button>
+
+        <button id="nav-btn-profile" onclick="window.switchTab('profile')" class="flex flex-col items-center gap-1 text-pink-400 hover:text-pink-600 transition-all">
+            <div class="tab-icon p-2 rounded-xl transition-all duration-300">
+                <i data-lucide="user" class="w-5 h-5"></i>
+            </div>
+            <span class="text-[9px] font-bold tracking-wider">Profil</span>
+        </button>
+    </nav>
+
+
+    <!-- Firebase & Custom App Logic module -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
+        import { 
+            getFirestore, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, collection, onSnapshot, query, where, orderBy, limit 
+        } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-elv5Q6AA__m7ByeGR6sZNx7NIg4j6q0",
+            authDomain: "mamanweb-2351f.firebaseapp.com",
+            projectId: "mamanweb-2351f",
+            storageBucket: "mamanweb-2351f.firebasestorage.app",
+            messagingSenderId: "472769825828",
+            appId: "1:472769825828:web:8ad8b6d91f91cea3fd1cb1",
+            measurementId: "G-YGKMDRG2B5"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const analytics = getAnalytics(app);
+
+        // Global State
+        let currentUsername = localStorage.getItem('maman_username') || '';
+        let countdownInterval = null;
+        let allUsers = [];
+        let hasTriggeredPopup = false;
+        let isRegisterMode = true; // Default state is Register Mode
+        let chatUnsubscribe = null;
+
+        // Initialize application routing & checks
+        window.addEventListener('DOMContentLoaded', () => {
+            clearAuthInputs();
+            lucide.createIcons();
+            checkHashRoute();
+            checkAuthState();
+            listenToCelebrations();
+
+            // Start the interactive bubble generator
+            startBubbleGenerator();
+        });
+
+        window.addEventListener('hashchange', checkHashRoute);
+
+        function clearAuthInputs() {
+            const authPass = document.getElementById('auth-password');
+            const authUser = document.getElementById('auth-username');
+            const authFull = document.getElementById('auth-fullname');
+            if (authPass) authPass.value = '';
+            if (authUser) authUser.value = '';
+            if (authFull) authFull.value = '';
+        }
+
+        // Toggle Auth Mode (Daftar vs Masuk)
+        window.setAuthMode = function(mode) {
+            const tabRegister = document.getElementById('tab-btn-register');
+            const tabLogin = document.getElementById('tab-btn-login');
+            const fieldFullname = document.getElementById('field-fullname');
+            const helperText = document.getElementById('auth-helper-text');
+            const subtitle = document.getElementById('auth-subtitle');
+            const submitBtnText = document.getElementById('auth-btn-text');
+
+            if (mode === 'register') {
+                isRegisterMode = true;
+                tabRegister.className = "flex-1 py-2.5 text-xs font-bold rounded-xl transition-all text-pink-600 bg-white shadow-sm";
+                tabLogin.className = "flex-1 py-2.5 text-xs font-bold rounded-xl transition-all text-pink-400";
+                fieldFullname.classList.remove('hidden');
+                helperText.innerText = "Buat akun barumu di bawah ini. Setelah mendaftar, kamu baru bisa masuk ke aplikasi!";
+                subtitle.innerText = "Silakan Daftarkan Akun Terlebih Dahulu ✨";
+                submitBtnText.innerText = "Daftar Sekarang";
+            } else {
+                isRegisterMode = false;
+                tabRegister.className = "flex-1 py-2.5 text-xs font-bold rounded-xl transition-all text-pink-400";
+                tabLogin.className = "flex-1 py-2.5 text-xs font-bold rounded-xl transition-all text-pink-600 bg-white shadow-sm";
+                fieldFullname.classList.add('hidden');
+                helperText.innerText = "Silakan masuk menggunakan username & kata sandi terdaftar milikmu.";
+                subtitle.innerText = "Masuk ke Akun Terdaftarmu ✨";
+                submitBtnText.innerText = "Masuk Sekarang";
+            }
+            lucide.createIcons();
+        };
+
+        function checkHashRoute() {
+            if (window.location.hash === '#admin') {
+                showPage('admin-page');
+                hideBottomNav();
+                const isAdmin = localStorage.getItem('maman_is_admin') === 'true';
+                if (isAdmin) {
+                    document.getElementById('admin-auth-box').classList.add('hidden');
+                    document.getElementById('admin-panel-content').classList.remove('hidden');
+                    loadAdminUsersList();
+                } else {
+                    document.getElementById('admin-auth-box').classList.remove('hidden');
+                    document.getElementById('admin-panel-content').classList.add('hidden');
+                }
+            } else {
+                checkAuthState();
+            }
+        }
+
+        function checkAuthState() {
+            const isLoggedIn = localStorage.getItem('maman_logged_in') === 'true';
+            const isAdmin = localStorage.getItem('maman_is_admin') === 'true';
+
+            if (isLoggedIn && currentUsername) {
+                if (isAdmin) {
+                    showPage('admin-page');
+                    hideBottomNav();
+                    document.getElementById('admin-auth-box').classList.add('hidden');
+                    document.getElementById('admin-panel-content').classList.remove('hidden');
+                    loadAdminUsersList();
+                } else {
+                    enterApplication();
+                }
+            } else {
+                clearAuthInputs();
+                clearSetupFields();
+                showPage('auth-page');
+                hideBottomNav();
+                window.setAuthMode('register'); 
+            }
+        }
+
+        // Handle separate registration and login
+        window.handleAuth = async function(e) {
+            e.preventDefault();
+            const passwordInput = document.getElementById('auth-password').value;
+            const usernameInput = document.getElementById('auth-username').value.trim().toLowerCase();
+            const fullnameInput = document.getElementById('auth-fullname').value.trim();
+
+            if (!usernameInput || !passwordInput) {
+                alert("Harap lengkapi semua field ya! 🌸");
+                return;
+            }
+
+            const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+            if (!usernameRegex.test(usernameInput)) {
+                alert("Username harus berupa 3-20 karakter alfanumerik (tanpa spasi/simbol)! 🌸");
+                return;
+            }
+
+            try {
+                const userDocRef = doc(db, "users", usernameInput);
+                const userDoc = await getDoc(userDocRef);
+
+                if (isRegisterMode) {
+                    if (userDoc.exists()) {
+                        alert("Username ini sudah terdaftar! Silakan gunakan username lain atau langsung masuk. 🌸");
+                    } else {
+                        const newUser = {
+                            username: usernameInput,
+                            password: passwordInput,
+                            name: fullnameInput || usernameInput,
+                            day: "",
+                            month: "1",
+                            hour: 0,
+                            minute: 0,
+                            message: "",
+                            targetDate: 0
+                        };
+                        await setDoc(userDocRef, newUser);
+                        alert("Akun berhasil didaftarkan! Sekarang silakan gunakan tab 'Masuk' untuk masuk. 🎉");
+                        window.setAuthMode('login');
+                        clearAuthInputs();
+                    }
+                } else {
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+                        if (userData.password === passwordInput) {
+                            localStorage.setItem('maman_logged_in', 'true');
+                            localStorage.setItem('maman_is_admin', 'false');
+                            localStorage.setItem('maman_username', usernameInput);
+                            currentUsername = usernameInput;
+                            
+                            clearAuthInputs();
+                            enterApplication();
+                        } else {
+                            alert("Sandi salah! Tolong periksa kembali ya sayang. 🌸");
+                        }
+                    } else {
+                        alert("Username belum terdaftar! Silakan daftarkan akunmu terlebih dahulu pada tab 'Daftar Akun'. 🌸");
+                    }
+                }
+            } catch (err) {
+                console.error("Auth error: ", err);
+                alert("Terjadi kesalahan sistem, silakan coba lagi.");
+            }
+        };
+
+        // Enter App
+        async function enterApplication() {
+            const isAdmin = localStorage.getItem('maman_is_admin') === 'true';
+
+            if (isAdmin) {
+                showPage('admin-page');
+                hideBottomNav();
+                document.getElementById('admin-auth-box').classList.add('hidden');
+                document.getElementById('admin-panel-content').classList.remove('hidden');
+                loadAdminUsersList();
+                return;
+            }
+
+            document.getElementById('profile-username').innerText = `@${currentUsername}`;
+            showBottomNav();
+
+            try {
+                const userDocRef = doc(db, "users", currentUsername);
+                const userDoc = await getDoc(userDocRef);
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    if (data.targetDate && data.targetDate > 0) {
+                        switchTab('timer');
+                    } else {
+                        switchTab('setup');
+                    }
+                } else {
+                    switchTab('setup');
+                }
+            } catch (err) {
+                switchTab('setup');
+            }
+
+            listenToWishes();
+            listenToAdminMessages();
+            listenToGroupChat();
+        }
+
+        function showBottomNav() {
+            const nav = document.getElementById('bottom-nav');
+            nav.classList.remove('translate-y-32');
+            nav.classList.add('translate-y-0');
+        }
+
+        function hideBottomNav() {
+            const nav = document.getElementById('bottom-nav');
+            nav.classList.remove('translate-y-0');
+            nav.classList.add('translate-y-32');
+        }
+
+        // Switch Tabs
+        window.switchTab = function(tabId) {
+            const isLoggedIn = localStorage.getItem('maman_logged_in') === 'true';
+            if (!isLoggedIn && window.location.hash !== '#admin') return;
+
+            document.getElementById('nav-btn-timer').className = "flex flex-col items-center gap-1 text-pink-400 hover:text-pink-600 transition-all";
+            document.getElementById('nav-btn-setup').className = "flex flex-col items-center gap-1 text-pink-400 hover:text-pink-600 transition-all";
+            document.getElementById('nav-btn-chat').className = "flex flex-col items-center gap-1 text-pink-400 hover:text-pink-600 transition-all";
+            document.getElementById('nav-btn-search').className = "flex flex-col items-center gap-1 text-pink-400 hover:text-pink-600 transition-all";
+            document.getElementById('nav-btn-profile').className = "flex flex-col items-center gap-1 text-pink-400 hover:text-pink-600 transition-all";
+
+            if (tabId === 'timer') {
+                document.getElementById('nav-btn-timer').classList.add('active-tab');
+                showPage('timer-page');
+                showTimer();
+            } else if (tabId === 'setup') {
+                document.getElementById('nav-btn-setup').classList.add('active-tab');
+                showPage('setup-page');
+                populateSetupFields();
+            } else if (tabId === 'chat') {
+                document.getElementById('nav-btn-chat').classList.add('active-tab');
+                showPage('chat-page');
+                scrollToBottom();
+            } else if (tabId === 'search') {
+                document.getElementById('nav-btn-search').classList.add('active-tab');
+                showPage('search-page');
+                loadUsersList();
+            } else if (tabId === 'profile') {
+                document.getElementById('nav-btn-profile').classList.add('active-tab');
+                showPage('profile-page');
+            }
+        };
+
+        function showPage(pageId) {
+            document.getElementById('auth-page').classList.add('hidden-section');
+            document.getElementById('setup-page').classList.add('hidden-section');
+            document.getElementById('timer-page').classList.add('hidden-section');
+            document.getElementById('chat-page').classList.add('hidden-section');
+            document.getElementById('search-page').classList.add('hidden-section');
+            document.getElementById('profile-page').classList.add('hidden-section');
+            document.getElementById('admin-page').classList.add('hidden-section');
+
+            const targetPage = document.getElementById(pageId);
+            targetPage.classList.remove('hidden-section');
+            lucide.createIcons();
+        }
+
+        // Setup field populating with active user's data
+        async function populateSetupFields() {
+            if (!currentUsername) return;
+            try {
+                const userDocRef = doc(db, "users", currentUsername);
+                const userDoc = await getDoc(userDocRef);
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    document.getElementById('name').value = data.name || '';
+                    document.getElementById('day').value = data.day || '';
+                    document.getElementById('month').value = data.month || '1';
+                    document.getElementById('manual-hour').value = data.hour !== undefined ? data.hour : '';
+                    document.getElementById('manual-minute').value = data.minute !== undefined ? data.minute : '';
+                    document.getElementById('message').value = data.message || '';
+                } else {
+                    clearSetupFields();
+                }
+            } catch (err) {
+                clearSetupFields();
+            }
+        }
+
+        function clearSetupFields() {
+            const nameEl = document.getElementById('name');
+            const dayEl = document.getElementById('day');
+            const monthEl = document.getElementById('month');
+            const hourEl = document.getElementById('manual-hour');
+            const minEl = document.getElementById('manual-minute');
+            const msgEl = document.getElementById('message');
+
+            if (nameEl) nameEl.value = '';
+            if (dayEl) dayEl.value = '';
+            if (monthEl) monthEl.value = '1';
+            if (hourEl) hourEl.value = '';
+            if (minEl) minEl.value = '';
+            if (msgEl) msgEl.value = '';
+        }
+
+        // Get Next Birthday with exact hour and minute
+        function getNextBirthday(day, month, hour, minute) {
+            const now = new Date();
+            let year = now.getFullYear();
+            let target = new Date(year, month - 1, day, hour, minute, 0);
+
+            if (target < now) {
+                target.setFullYear(year + 1);
+            }
+            return target.getTime();
+        }
+
+        // Start / Update Timer
+        window.startTimer = async function() {
+            const name = document.getElementById('name').value.trim();
+            const d = parseInt(document.getElementById('day').value);
+            const m = parseInt(document.getElementById('month').value);
+            const hour = parseInt(document.getElementById('manual-hour').value);
+            const minute = parseInt(document.getElementById('manual-minute').value);
+            const msg = document.getElementById('message').value.trim();
+
+            if (!name || isNaN(d) || isNaN(m) || m < 1 || m > 12 || d < 1 || d > 31) {
+                alert("Lengkapi data tanggal dengan benar ya! 🌸");
+                return;
+            }
+
+            if (isNaN(hour) || hour < 0 || hour > 23 || isNaN(minute) || minute < 0 || minute > 59) {
+                alert("Lengkapi data Jam (0-23) & Menit (0-59) secara manual dengan benar ya! 🌸");
+                return;
+            }
+
+            const targetDate = getNextBirthday(d, m, hour, minute);
+            hasTriggeredPopup = false; 
+
+            try {
+                const userDocRef = doc(db, "users", currentUsername);
+                await updateDoc(userDocRef, {
+                    name,
+                    day: d,
+                    month: m,
+                    hour: hour,
+                    minute: minute,
+                    message: msg,
+                    targetDate
+                });
+                switchTab('timer');
+            } catch (err) {
+                console.error(err);
+                alert("Gagal menyimpan data countdown.");
+            }
+        };
+
+        // Show Timer and handle realtime countdown
+        async function showTimer() {
+            if (countdownInterval) clearInterval(countdownInterval);
+
+            const userDocRef = doc(db, "users", currentUsername);
+            const userDoc = await getDoc(userDocRef);
+            if (!userDoc.exists()) return;
+
+            const data = userDoc.data();
+            if (!data.targetDate) {
+                switchTab('setup');
+                return;
+            }
+
+            document.getElementById('display-name').innerText = `Spesial Untuk ${data.name}!`;
+
+            const timerContainer = document.getElementById('timer');
+            const lockIndicator = document.getElementById('lock-indicator');
+            const msgBox = document.getElementById('message-display');
+            const congratsText = document.getElementById('congrats-text');
+
+            const update = () => {
+                const now = new Date().getTime();
+                const diff = data.targetDate - now;
+
+                if (diff <= 0) {
+                    timerContainer.classList.add('hidden');
+                    lockIndicator.classList.add('hidden');
+                    
+                    // Show secret message box
+                    msgBox.classList.remove('hidden');
+                    congratsText.innerHTML = `🎉 Selamat Ulang Tahun ${data.name}! 🎂<br><br>${data.message || "Semoga harimu dipenuhi kebahagiaan, kesehatan, dan impianmu tercapai!"}<br><br>✨❤️✨`;
+                    
+                    clearInterval(countdownInterval);
+
+                    // Open Cute Modal Gift Box immediately on completion
+                    if (!hasTriggeredPopup) {
+                        hasTriggeredPopup = true;
+                        triggerGiftModal(data);
+                    }
+                    return;
+                }
+
+                // Countdown is still active
+                timerContainer.classList.remove('hidden');
+                lockIndicator.classList.remove('hidden');
+                msgBox.classList.add('hidden');
+
+                document.getElementById('days').innerText = Math.floor(diff / (1000 * 60 * 60 * 24));
+                document.getElementById('hours').innerText = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                document.getElementById('minutes').innerText = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                document.getElementById('seconds').innerText = Math.floor((diff % (1000 * 60)) / 1000);
+            };
+
+            update();
+            countdownInterval = setInterval(update, 1000);
+        }
+
+        // Trigger Gift Modal
+        function triggerGiftModal(userData) {
+            document.getElementById('gift-modal').classList.remove('hidden');
+            document.getElementById('gift-secret-message').classList.add('hidden');
+            document.getElementById('gift-box-btn').classList.remove('hidden');
+            document.getElementById('gift-modal-title').innerText = `Hore, Countdown Selesai! 🎉`;
+            
+            document.getElementById('gift-secret-text').innerText = userData.message || "Selamat Ulang Tahun! Semoga dilimpahkan kebahagiaan! 🌸";
+        }
+
+        // Open Gift Box (Confetti explosion & reveal text)
+        window.openGift = async function() {
+            createSparkles();
+
+            const giftBox = document.getElementById('gift-box-btn');
+            giftBox.classList.add('animate__animated', 'animate__bounceOut');
+            setTimeout(() => {
+                giftBox.classList.add('hidden');
+                giftBox.classList.remove('animate__animated', 'animate__bounceOut');
+                
+                const secretMsg = document.getElementById('gift-secret-message');
+                secretMsg.classList.remove('hidden');
+                secretMsg.classList.add('animate__animated', 'animate__heartBeat');
+            }, 600);
+
+            try {
+                await setDoc(doc(db, "celebrations", currentUsername + "_" + Date.now()), {
+                    username: currentUsername,
+                    name: document.getElementById('display-name').innerText.replace("Spesial Untuk ", "").replace("!", ""),
+                    timestamp: Date.now()
+                });
+            } catch (err) {
+                console.error("Gagal mencatat riwayat perayaan:", err);
+            }
+        };
+
+        window.closeGiftModal = function() {
+            document.getElementById('gift-modal').classList.add('hidden');
+        };
+
+        // Finish and Reset Layout ("Selesai, makasih dev" Button handler)
+        window.finishAndReset = async function() {
+            try {
+                const userDocRef = doc(db, "users", currentUsername);
+                await updateDoc(userDocRef, {
+                    name: "",
+                    day: "",
+                    month: "1",
+                    hour: "",
+                    minute: "",
+                    message: "",
+                    targetDate: 0
+                });
+                if (countdownInterval) clearInterval(countdownInterval);
+                clearSetupFields();
+                document.getElementById('gift-modal').classList.add('hidden');
+                switchTab('setup');
+                alert("Sama-sama! ✨ Countdown telah diselesaikan. Silakan buat countdown baru kapan saja!");
+            } catch (err) {
+                console.error(err);
+                switchTab('setup');
+            }
+        };
+
+        // Create Confetti Sparkles
+        function createSparkles() {
+            const container = document.getElementById('sparkle-container');
+            container.innerHTML = '';
+            const colors = ['#f43f5e', '#ec4899', '#d946ef', '#a855f7', '#eab308', '#10b981'];
+            
+            for (let i = 0; i < 40; i++) {
+                const p = document.createElement('div');
+                p.className = 'sparkle-particle';
+                p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                p.style.width = Math.random() * 8 + 6 + 'px';
+                p.style.height = p.style.width;
+                p.style.borderRadius = '50%';
+                p.style.left = '50%';
+                p.style.top = '50%';
+                
+                const angle = Math.random() * Math.PI * 2;
+                const dist = Math.random() * 120 + 40;
+                p.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
+                p.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
+                
+                container.appendChild(p);
+            }
+        }
+
+        // Reset Countdown Data
+        window.resetTimer = async function() {
+            if (confirm("Apakah kamu yakin ingin menghapus data countdown ini?")) {
+                try {
+                    const userDocRef = doc(db, "users", currentUsername);
+                    await updateDoc(userDocRef, {
+                        name: "",
+                        day: "",
+                        month: "1",
+                        hour: "",
+                        minute: "",
+                        message: "",
+                        targetDate: 0
+                    });
+                    if (countdownInterval) clearInterval(countdownInterval);
+                    clearSetupFields();
+                    switchTab('setup');
+                } catch (err) {
+                    alert("Gagal mereset data.");
+                }
+            }
+        };
+
+        // Logout
+        window.logout = function() {
+            if (confirm("Apakah kamu yakin ingin keluar?")) {
+                localStorage.removeItem('maman_logged_in');
+                localStorage.removeItem('maman_is_admin');
+                localStorage.removeItem('maman_username');
+                currentUsername = '';
+                if (countdownInterval) clearInterval(countdownInterval);
+                if (chatUnsubscribe) chatUnsubscribe();
+                
+                clearAuthInputs();
+                clearSetupFields();
+
+                hideBottomNav();
+                showPage('auth-page');
+                window.setAuthMode('register');
+            }
+        };
+
+        // Admin Logout specifically
+        window.logoutAdmin = function() {
+            if (confirm("Apakah Anda yakin ingin keluar dari mode Admin?")) {
+                localStorage.removeItem('maman_logged_in');
+                localStorage.removeItem('maman_is_admin');
+                localStorage.removeItem('maman_username');
+                currentUsername = '';
+                
+                document.getElementById('admin-auth-box').classList.remove('hidden');
+                document.getElementById('admin-panel-content').classList.add('hidden');
+                document.getElementById('admin-email-input').value = '';
+                document.getElementById('admin-pass-input').value = '';
+
+                window.location.hash = ''; 
+            }
+        };
+
+
+        // ================= GROUP CHAT REAL-TIME SYSTEM =================
+        function listenToGroupChat() {
+            if (!currentUsername) return;
+            
+            if (chatUnsubscribe) chatUnsubscribe();
+
+            const q = query(collection(db, "group_chat"), orderBy("timestamp", "asc"), limit(60));
+            chatUnsubscribe = onSnapshot(q, (snapshot) => {
+                const container = document.getElementById('chat-messages');
+                container.innerHTML = '';
+
+                if (snapshot.empty) {
+                    container.innerHTML = '<p class="text-center text-pink-400 text-xs py-12 italic">Belum ada pesan di sini. Jadilah yang pertama mengirim pesan! ✨</p>';
+                    return;
+                }
+
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const isOwnMessage = data.sender === currentUsername;
+                    
+                    const bubbleWrapper = document.createElement('div');
+                    bubbleWrapper.className = `flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'} space-y-1 w-full`;
+
+                    bubbleWrapper.innerHTML = `
+                        <span class="text-[9px] font-bold text-pink-500 px-1">@${data.sender}</span>
+                        <div class="max-w-[85%] p-3 rounded-2xl text-xs ${
+                            isOwnMessage 
+                            ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-tr-none' 
+                            : 'bg-white/90 text-pink-800 rounded-tl-none border border-pink-100'
+                        } shadow-sm">
+                            <p class="break-all leading-relaxed">${escapeHTML(data.message)}</p>
+                            <span class="block text-[8px] mt-1 text-right ${isOwnMessage ? 'text-pink-100' : 'text-pink-400'}">
+                                ${new Date(data.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                            </span>
+                        </div>
+                    `;
+                    container.appendChild(bubbleWrapper);
+                });
+
+                scrollToBottom();
+            });
+        }
+
+        window.sendChatMessage = async function(e) {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            try {
+                const chatDocId = currentUsername + "_" + Date.now();
+                await setDoc(doc(db, "group_chat", chatDocId), {
+                    sender: currentUsername,
+                    message: message,
+                    timestamp: Date.now()
+                });
+                input.value = '';
+                scrollToBottom();
+            } catch (err) {
+                console.error("Gagal mengirim pesan chat: ", err);
+            }
+        };
+
+        function scrollToBottom() {
+            const chatBox = document.getElementById('chat-messages');
+            if (chatBox) {
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+
+        // ================= SEARCH & WISHES SYSTEM =================
+        async function loadUsersList() {
+            const usersContainer = document.getElementById('users-list');
+            usersContainer.innerHTML = '<p class="text-center text-pink-400 text-sm py-4">Memuat data pengguna...</p>';
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "users"));
+                allUsers = [];
+                querySnapshot.forEach((doc) => {
+                    if (doc.id !== currentUsername) {
+                        allUsers.push(doc.data());
+                    }
+                });
+                renderUsers(allUsers);
+            } catch (err) {
+                usersContainer.innerHTML = '<p class="text-center text-rose-500 text-xs py-4">Gagal memuat pengguna.</p>';
+            }
+        }
+
+        function renderUsers(users) {
+            const usersContainer = document.getElementById('users-list');
+            usersContainer.innerHTML = '';
+
+            if (users.length === 0) {
+                usersContainer.innerHTML = '<p class="text-center text-pink-400 text-sm py-4">Tidak ada pengguna lain ditemukan.</p>';
+                return;
+            }
+
+            users.forEach((u) => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between bg-white/80 p-4 rounded-2xl border border-pink-100/50 shadow-sm';
+                item.innerHTML = `
+                    <div class="overflow-hidden mr-2">
+                        <h4 class="font-bold text-pink-700 truncate text-sm">@${u.username}</h4>
+                        <p class="text-[11px] text-pink-400 truncate">${u.name ? 'Spesial: ' + u.name : 'Belum mengatur hari spesial'}</p>
+                    </div>
+                    <button onclick="window.openWishModal('${u.username}')" class="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white text-[11px] font-bold px-3 py-2 rounded-xl transition-all flex items-center gap-1 shrink-0">
+                        <i data-lucide="heart" class="w-3 h-3 fill-white"></i> Ucapan
+                    </button>
+                `;
+                usersContainer.appendChild(item);
+            });
+            lucide.createIcons();
+        }
+
+        window.filterUsers = function() {
+            const queryVal = document.getElementById('search-input').value.toLowerCase().trim();
+            const filtered = allUsers.filter(u => u.username.toLowerCase().includes(queryVal));
+            renderUsers(filtered);
+        };
+
+        window.openWishModal = function(targetUser) {
+            document.getElementById('wish-target-username').value = targetUser;
+            document.getElementById('wish-modal-target-desc').innerText = `Kirimkan doa terbaikmu untuk @${targetUser}`;
+            document.getElementById('wish-message-input').value = '';
+            document.getElementById('wish-modal').classList.remove('hidden');
+        };
+
+        window.closeWishModal = function() {
+            document.getElementById('wish-modal').classList.add('hidden');
+        };
+
+        window.sendWishSubmit = async function() {
+            const target = document.getElementById('wish-target-username').value;
+            const message = document.getElementById('wish-message-input').value.trim();
+
+            if (!message) {
+                alert("Tulis ucapan kamu dulu ya! 🌸");
+                return;
+            }
+
+            try {
+                await setDoc(doc(db, "wishes", target + "_" + currentUsername + "_" + Date.now()), {
+                    to: target,
+                    from: currentUsername,
+                    message: message,
+                    timestamp: Date.now()
+                });
+                alert(`Ucapan berhasil terkirim ke @${target}! 🚀`);
+                window.closeWishModal();
+            } catch (err) {
+                alert("Gagal mengirim ucapan.");
+            }
+        };
+
+        // Listen for wishes sent to current user
+        function listenToWishes() {
+            if (!currentUsername) return;
+            const wishesQuery = query(collection(db, "wishes"), where("to", "==", currentUsername));
+            onSnapshot(wishesQuery, (snapshot) => {
+                const container = document.getElementById('wishes-list');
+                container.innerHTML = '';
+                
+                if (snapshot.empty) {
+                    container.innerHTML = '<p class="text-pink-400 italic">Belum ada ucapan masuk. Cari temanmu dan saling berkirim ucapan!</p>';
+                    return;
+                }
+
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const item = document.createElement('div');
+                    item.className = 'bg-pink-50/70 p-2.5 rounded-xl border border-pink-100/50 text-xs';
+                    item.innerHTML = `
+                        <div class="flex justify-between font-bold text-pink-600 mb-0.5">
+                            <span class="truncate pr-2">@${data.from}</span>
+                            <span class="text-[9px] text-pink-400 shrink-0">${new Date(data.timestamp).toLocaleDateString()}</span>
+                        </div>
+                        <p class="text-pink-700 italic">"${data.message}"</p>
+                    `;
+                    container.appendChild(item);
+                });
+            });
+        }
+
+
+        // ================= CELEBRATION HISTORY SYSTEM =================
+        function listenToCelebrations() {
+            const q = query(collection(db, "celebrations"), orderBy("timestamp", "desc"), limit(10));
+            onSnapshot(q, (snapshot) => {
+                const container = document.getElementById('celebration-history-list');
+                container.innerHTML = '';
+
+                if (snapshot.empty) {
+                    container.innerHTML = '<p class="text-pink-400 italic">Belum ada perayaan yang tercatat.</p>';
+                    return;
+                }
+
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const item = document.createElement('div');
+                    item.className = 'bg-white/50 p-2 rounded-xl border border-pink-100/30 flex items-center justify-between text-left';
+                    item.innerHTML = `
+                        <div class="flex items-center gap-2 overflow-hidden mr-2">
+                            <span class="text-lg shrink-0">🎉</span>
+                            <div class="overflow-hidden">
+                                <span class="font-bold text-pink-800 truncate block text-xs">${data.name} (@${data.username})</span>
+                                <span class="block text-[9px] text-pink-400">Merayakan hari spesialnya!</span>
+                            </div>
+                        </div>
+                        <span class="text-[9px] text-pink-400 shrink-0">${new Date(data.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    `;
+                    container.appendChild(item);
+                });
+            });
+        }
+
+
+        // ================= FLOATING BUBBLE GENERATOR SYSTEM =================
+        function startBubbleGenerator() {
+            const bubbleContainer = document.createElement('div');
+            bubbleContainer.id = 'bubble-container';
+            bubbleContainer.className = 'fixed inset-0 pointer-events-none overflow-hidden z-20';
+            document.body.appendChild(bubbleContainer);
+
+            setInterval(() => {
+                createBubble(bubbleContainer);
+            }, 1500);
+        }
+
+        function createBubble(container) {
+            if (document.hidden) return; 
+
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble pointer-events-auto';
+            
+            const size = Math.random() * 45 + 25; 
+            const left = Math.random() * 90 + 5; 
+            const speed = Math.random() * 8 + 6; 
+            const drift = (Math.random() * 160 - 80) + 'px'; 
+
+            bubble.style.width = `${size}px`;
+            bubble.style.height = `${size}px`;
+            bubble.style.left = `${left}%`;
+            bubble.style.setProperty('--speed', `${speed}s`);
+            bubble.style.setProperty('--drift', drift);
+
+            bubble.addEventListener('click', (e) => {
+                e.stopPropagation();
+                popBubble(bubble, size);
+            });
+
+            container.appendChild(bubble);
+
+            setTimeout(() => {
+                if (bubble.parentNode === container) {
+                    bubble.remove();
+                }
+            }, speed * 1000);
+        }
+
+        function popBubble(bubble, size) {
+            playPopSound();
+
+            const rect = bubble.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+
+            createPopParticles(x, y);
+
+            bubble.style.transform = 'scale(1.4)';
+            bubble.style.opacity = '0';
+            bubble.style.transition = 'transform 0.1s ease-out, opacity 0.1s ease-out';
+            
+            setTimeout(() => {
+                bubble.remove();
+            }, 100);
+        }
+
+        function createPopParticles(x, y) {
+            const container = document.getElementById('bubble-container');
+            const particleCount = 8;
+            const colors = ['#f43f5e', '#fbcfe8', '#fce7f3', '#ffffff', '#db2777'];
+
+            for (let i = 0; i < particleCount; i++) {
+                const p = document.createElement('div');
+                p.className = 'pop-particle';
+                p.style.left = `${x}px`;
+                p.style.top = `${y}px`;
+                p.style.width = `${Math.random() * 6 + 4}px`;
+                p.style.height = p.style.width;
+                p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                const angle = (i / particleCount) * Math.PI * 2;
+                const distance = Math.random() * 40 + 20;
+                const dx = Math.cos(angle) * distance + 'px';
+                const dy = Math.sin(angle) * distance + 'px';
+
+                p.style.setProperty('--dx', dx);
+                p.style.setProperty('--dy', dy);
+
+                container.appendChild(p);
+
+                setTimeout(() => {
+                    p.remove();
+                }, 400);
+            }
+        }
+
+        function playPopSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.04);
+                osc.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.12);
+                
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.start();
+                osc.stop(ctx.currentTime + 0.13);
+            } catch (e) {
+                // blocked
+            }
+        }
+
+
+        // ================= ADMIN DASHBOARD FUNCTIONALITY =================
+        window.verifyAdmin = function() {
+            const emailVal = document.getElementById('admin-email-input').value.trim().toLowerCase();
+            const passVal = document.getElementById('admin-pass-input').value;
+
+            if (emailVal === 'mamansukamieayam@gmail.com' && passVal === 'mamansukamieayam123') {
+                localStorage.setItem('maman_logged_in', 'true');
+                localStorage.setItem('maman_is_admin', 'true');
+                localStorage.setItem('maman_username', 'mamansukamieayam@gmail.com');
+                currentUsername = 'mamansukamieayam@gmail.com';
+
+                document.getElementById('admin-auth-box').classList.add('hidden');
+                document.getElementById('admin-panel-content').classList.remove('hidden');
+                loadAdminUsersList();
+                alert("Berhasil masuk sebagai Admin! 🔐");
+            } else {
+                alert("Gmail atau Sandi Admin salah!");
+            }
+        };
+
+        async function loadAdminUsersList() {
+            const container = document.getElementById('admin-users-list');
+            container.innerHTML = '<p class="text-center text-purple-400 py-2">Memuat pengguna...</p>';
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "users"));
+                container.innerHTML = '';
+                querySnapshot.forEach((docSnap) => {
+                    const u = docSnap.data();
+                    const item = document.createElement('div');
+                    item.className = 'flex items-center justify-between bg-purple-50/50 p-3 rounded-xl border border-purple-100 gap-2';
+                    item.innerHTML = `
+                        <div class="overflow-hidden">
+                            <span class="font-bold text-purple-800 text-xs truncate block">@${u.username}</span>
+                            <span class="block text-[10px] text-purple-400">Sandi: ${u.password}</span>
+                        </div>
+                        <button onclick="window.deleteUser('${u.username}')" class="bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all shrink-0">
+                            Hapus
+                        </button>
+                    `;
+                    container.appendChild(item);
+                });
+            } catch (err) {
+                container.innerHTML = '<p class="text-center text-rose-500 py-2">Gagal memuat.</p>';
+            }
+        }
+
+        window.deleteUser = async function(username) {
+            if (confirm(`Apakah Anda yakin ingin menghapus akun @${username}? Tindakan ini permanen.`)) {
+                try {
+                    await deleteDoc(doc(db, "users", username));
+                    alert(`Akun @${username} berhasil dihapus.`);
+                    loadAdminUsersList();
+                } catch (err) {
+                    alert("Gagal menghapus akun.");
+                }
+            }
+        };
+
+        window.sendAdminMessage = async function() {
+            const target = document.getElementById('admin-msg-target').value.trim().toLowerCase();
+            const text = document.getElementById('admin-msg-text').value.trim();
+
+            if (!target || !text) {
+                alert("Harap isi target username dan pesan.");
+                return;
+            }
+
+            try {
+                await setDoc(doc(db, "admin_messages", target + "_" + Date.now()), {
+                    to: target,
+                    message: text,
+                    timestamp: Date.now()
+                });
+                alert(`Pesan admin berhasil dikirim ke @${target}!`);
+                document.getElementById('admin-msg-target').value = '';
+                document.getElementById('admin-msg-text').value = '';
+            } catch (err) {
+                alert("Gagal mengirim pesan admin.");
+            }
+        };
+
+        function listenToAdminMessages() {
+            if (!currentUsername) return;
+            const adminQuery = query(collection(db, "admin_messages"), where("to", "==", currentUsername));
+            onSnapshot(adminQuery, (snapshot) => {
+                const box = document.getElementById('admin-messages-box');
+                const list = document.getElementById('admin-messages-list');
+                list.innerHTML = '';
+
+                if (snapshot.empty) {
+                    box.classList.add('hidden');
+                    return;
+                }
+
+                box.classList.remove('hidden');
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const item = document.createElement('p');
+                    item.className = 'border-l-2 border-purple-400 pl-2 italic text-purple-900';
+                    item.innerHTML = `"${data.message}"`;
+                    list.appendChild(item);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
