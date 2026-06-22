@@ -1,0 +1,1849 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <!-- InstanWeb AI Iframe Router Guard -->
+    <script id="instanweb-iframe-guard">
+    (function() {
+        if (window !== window.parent) {
+            // Overwrite window.location.replace to intercept absolute redirect recursions
+            const originalReplace = window.location.replace;
+            window.location.replace = function(url) {
+                console.log("[InstanWeb Guard] Filtered iframe redirect:", url);
+                const hashIndex = url.indexOf('#');
+                if (hashIndex !== -1) {
+                    window.location.hash = url.substring(hashIndex);
+                    return;
+                }
+                const originPrefix = window.location.origin + '/';
+                const cleanUrl = url.split('?')[0];
+                if (url === '/' || url === '' || cleanUrl === originPrefix || cleanUrl === window.location.origin) {
+                    return; // Prevent loading parent React app
+                }
+                try { originalReplace.call(window.location, url); } catch(e) { window.location.hash = url; }
+            };
+            window.location.assign = window.location.replace;
+        }
+    })();
+    </script>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pusat Prestasi Manzcodecbt</title>
+    <link class="favicon" rel="icon" href="https://i.ibb.co.com/j94P09Sb/Chat-GPT-Image-10-Mei-2026-21-40-08-removebg-preview.png" type="image/png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PDF.js library for high-performance client-side PDF rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+        .stagger-1 { animation-delay: 0.1s; }
+        .stagger-2 { animation-delay: 0.2s; }
+        .stagger-3 { animation-delay: 0.3s; }
+        
+        html { scroll-behavior: smooth; }
+        
+        /* Hide scrollbar for nav */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col selection:bg-indigo-200 selection:text-indigo-900">
+
+    <!-- Mobile Top Header (Visible on mobile, hidden on desktop) -->
+    <header class="bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100 py-3.5 px-4 sticky top-0 z-[80] flex items-center justify-between md:hidden">
+        <div class="flex items-center gap-2.5">
+            <img src="https://i.ibb.co.com/j94P09Sb/Chat-GPT-Image-10-Mei-2026-21-40-08-removebg-preview.png" alt="manzcodecbt Logo" class="h-9 w-9 object-contain drop-shadow-sm">
+            <div class="flex flex-col">
+                <span class="text-base font-extrabold text-indigo-600 tracking-wider">PUSPRES MAC</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Real-time Toast Notification -->
+    <div id="realtime-toast" class="fixed top-4 right-4 z-[110] transform -translate-y-24 opacity-0 transition-all duration-500 ease-out pointer-events-none max-w-sm w-full">
+        <div class="bg-indigo-600 text-white p-4 rounded-2xl shadow-2xl flex items-start gap-3 border border-indigo-500 pointer-events-auto">
+            <div class="bg-white/20 p-2 rounded-xl shrink-0">
+                <svg class="w-6 h-6 text-white animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+            </div>
+            <div class="flex-1">
+                <h4 class="font-bold text-sm md:text-base">Pembaruan Real-Time!</h4>
+                <p id="toast-message" class="text-xs md:text-sm text-indigo-100 mt-0.5">Dokumen baru telah ditambahkan secara real-time.</p>
+            </div>
+            <button onclick="closeToast()" class="text-indigo-200 hover:text-white transition-colors shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal for Image Viewing (Enhanced with Carousel) -->
+    <div id="image-modal" class="hidden fixed inset-0 z-[100] bg-black bg-opacity-95 flex flex-col justify-center items-center p-4 transition-opacity duration-300 select-none">
+        <!-- Modal Top Bar -->
+        <div class="absolute top-4 right-4 left-4 flex items-center justify-between z-[110]">
+            <!-- Page Counter Badge -->
+            <div class="bg-black/65 px-4 py-2 rounded-full text-white text-xs md:text-sm font-semibold flex items-center gap-2 border border-white/10 shadow-lg">
+                <i class="fa-solid fa-file-image text-indigo-400"></i>
+                <span id="modal-page-counter">Halaman 1 dari 1</span>
+            </div>
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-3 bg-black/65 px-4 py-2 rounded-full border border-white/10 shadow-lg">
+                <button onclick="downloadImage()" class="text-white hover:text-indigo-400 transition-colors flex items-center gap-2" title="Unduh Halaman Ini">
+                    <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    <span class="hidden md:inline font-medium text-xs md:text-sm">Unduh</span>
+                </button>
+                <div class="w-px h-5 bg-gray-600"></div>
+                <span class="text-white text-2xl md:text-3xl cursor-pointer hover:text-red-400 transition-colors leading-none font-bold" onclick="closeModal()" title="Tutup">&times;</span>
+            </div>
+        </div>
+
+        <!-- Main Carousel Area -->
+        <div class="relative w-full max-w-5xl flex items-center justify-between px-2 md:px-12 mt-12">
+            <!-- Prev Button -->
+            <button id="modal-prev-btn" onclick="prevModalImage()" class="absolute left-2 md:left-4 z-10 bg-black/60 hover:bg-indigo-600 text-white p-2.5 md:p-4 rounded-full transition-all border border-white/10 flex items-center justify-center shadow-lg hover:scale-105">
+                <i class="fa-solid fa-chevron-left text-base md:text-xl"></i>
+            </button>
+
+            <!-- Image Container -->
+            <div class="w-full flex justify-center items-center min-h-[50vh]">
+                <img id="modal-img" class="max-w-full max-h-[75vh] md:max-h-[80vh] object-contain rounded-xl shadow-2xl transition-all duration-300" src="" alt="Dokumen">
+            </div>
+
+            <!-- Next Button -->
+            <button id="modal-next-btn" onclick="nextModalImage()" class="absolute right-2 md:right-4 z-10 bg-black/60 hover:bg-indigo-600 text-white p-2.5 md:p-4 rounded-full transition-all border border-white/10 flex items-center justify-center shadow-lg hover:scale-105">
+                <i class="fa-solid fa-chevron-right text-base md:text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Dot Indicators / Quick Jump -->
+        <div id="modal-dots-container" class="mt-6 flex flex-wrap justify-center gap-2 max-w-md overflow-x-auto py-2">
+            <!-- Generated dynamically -->
+        </div>
+    </div>
+
+    <!-- QR Code Modal (New Feature) -->
+    <div id="qr-modal" class="hidden fixed inset-0 z-[105] bg-black/60 backdrop-blur-sm flex justify-center items-center p-4">
+        <div class="bg-white p-6 rounded-3xl shadow-2xl max-w-sm w-full border border-gray-100 animate-fade-in text-center relative">
+            <button onclick="closeQrModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <h4 class="font-extrabold text-gray-800 text-lg mb-1">Kode QR Dokumen</h4>
+            <p id="qr-modal-doc-name" class="text-xs text-indigo-600 font-semibold mb-4 truncate max-w-full px-2"></p>
+            <div class="flex justify-center mb-4">
+                <img id="qr-modal-img" src="" alt="QR Code" class="w-48 h-48 border border-gray-100 p-3 bg-white rounded-2xl shadow-md">
+            </div>
+            <p class="text-xs text-gray-500 mb-4">Gunakan kode QR ini untuk akses langsung ke dokumen penerima.</p>
+            <div class="flex gap-2">
+                <button onclick="copyQrLink()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-xl text-xs font-bold transition-all">
+                    Salin Link
+                </button>
+                <a id="qr-modal-download" href="#" target="_blank" download="qrcode.png" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1">
+                    <i class="fa-solid fa-download"></i> Unduh QR
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-grow p-4 md:p-12 pb-28 md:pb-28 w-full max-w-7xl mx-auto">
+        
+        <!-- Sertifikat View (Public) -->
+        <div id="sertifikat-view" class="hidden flex flex-col items-center animate-fade-in">
+            <div class="w-full max-w-4xl mb-8 md:mb-10 text-center">
+                <h1 class="text-3xl md:text-5xl font-extrabold text-gray-800 mb-3 md:mb-4 tracking-tight">Penyimpanan Sertifikat</h1>
+                <p class="text-gray-600 mb-6 md:mb-8 text-base md:text-lg">Cari dan lihat sertifikat yang diunggah dengan aman.</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="relative transform hover:scale-[1.02] transition duration-300">
+                        <input type="text" id="search-sertifikat" placeholder="Cari nama sertifikat..." class="w-full px-5 py-3 md:px-6 md:py-4 border border-gray-300 rounded-full shadow-lg focus:outline-none focus:ring-4 focus:ring-indigo-500/30 focus:border-indigo-500 text-base md:text-lg transition-all duration-300">
+                        <svg class="w-5 h-5 md:w-6 md:h-6 text-gray-400 absolute right-5 md:right-6 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <div class="relative transform hover:scale-[1.02] transition duration-300">
+                        <select id="filter-cert-type" class="w-full px-5 py-3 md:px-6 md:py-4 border border-gray-300 rounded-full shadow-lg focus:outline-none focus:ring-4 focus:ring-indigo-500/30 focus:border-indigo-500 text-base md:text-lg transition-all duration-300 bg-white appearance-none cursor-pointer">
+                            <option value="">Semua Jenis</option>
+                            <option value="emas">Emas</option>
+                            <option value="perak">Perak</option>
+                            <option value="perunggu">Perunggu</option>
+                        </select>
+                        <svg class="w-5 h-5 md:w-6 md:h-6 text-gray-400 absolute right-5 md:right-6 top-1/2 transform -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                    <div class="relative transform hover:scale-[1.02] transition duration-300">
+                        <select id="filter-cert-status" class="w-full px-5 py-3 md:px-6 md:py-4 border border-gray-300 rounded-full shadow-lg focus:outline-none focus:ring-4 focus:ring-indigo-500/30 focus:border-indigo-500 text-base md:text-lg transition-all duration-300 bg-white appearance-none cursor-pointer text-indigo-600 font-medium">
+                            <option value="aktif">Sertifikat Aktif</option>
+                            <option value="arsip">Sertifikat yang Diarsipkan</option>
+                        </select>
+                        <svg class="w-5 h-5 md:w-6 md:h-6 text-gray-400 absolute right-5 md:right-6 top-1/2 transform -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                </div>
+            </div>
+            <div id="sertifikat-container" class="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                <!-- Documents will be rendered here -->
+            </div>
+        </div>
+
+        <!-- Piagam View (Public) -->
+        <div id="piagam-view" class="hidden flex flex-col items-center animate-fade-in">
+            <div class="w-full max-w-4xl mb-8 md:mb-10 text-center">
+                <h1 class="text-3xl md:text-5xl font-extrabold text-gray-800 mb-3 md:mb-4 tracking-tight">Penyimpanan Piagam</h1>
+                <p class="text-gray-600 mb-6 md:mb-8 text-base md:text-lg">Cari dan lihat piagam penghargaan yang diunggah dengan aman.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                    <div class="relative transform hover:scale-[1.02] transition duration-300">
+                        <input type="text" id="search-piagam" placeholder="Cari nama piagam..." class="w-full px-5 py-3 md:px-6 md:py-4 border border-gray-300 rounded-full shadow-lg focus:outline-none focus:ring-4 focus:ring-indigo-500/30 focus:border-indigo-500 text-base md:text-lg transition-all duration-300">
+                        <svg class="w-5 h-5 md:w-6 md:h-6 text-gray-400 absolute right-5 md:right-6 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <div class="relative transform hover:scale-[1.02] transition duration-300">
+                        <select id="filter-piagam-status" class="w-full px-5 py-3 md:px-6 md:py-4 border border-gray-300 rounded-full shadow-lg focus:outline-none focus:ring-4 focus:ring-indigo-500/30 focus:border-indigo-500 text-base md:text-lg transition-all duration-300 bg-white appearance-none cursor-pointer text-indigo-600 font-medium">
+                            <option value="aktif">Piagam Aktif</option>
+                            <option value="arsip">Piagam yang Diarsipkan</option>
+                        </select>
+                        <svg class="w-5 h-5 md:w-6 md:h-6 text-gray-400 absolute right-5 md:right-6 top-1/2 transform -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                </div>
+            </div>
+            <div id="piagam-container" class="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                <!-- Piagam documents will be rendered here -->
+            </div>
+        </div>
+
+        <!-- Pengumuman View (Public) -->
+        <div id="pengumuman-view" class="hidden flex flex-col items-center animate-fade-in">
+            <div class="w-full max-w-4xl mb-8 md:mb-10 text-center">
+                <h1 class="text-3xl md:text-5xl font-extrabold text-gray-800 mb-3 md:mb-4 tracking-tight">Pengumuman</h1>
+                <p class="text-gray-600 mb-6 md:mb-8 text-base md:text-lg">Lihat pengumuman nilai and informasi penting lainnya.</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="relative transform hover:scale-[1.02] transition duration-300">
+                        <input type="text" id="search-pengumuman" placeholder="Cari pengumuman..." class="w-full px-5 py-3 md:px-6 md:py-4 border border-gray-300 rounded-full shadow-lg focus:outline-none focus:ring-4 focus:ring-indigo-500/30 focus:border-indigo-500 text-base md:text-lg transition-all duration-300">
+                        <svg class="w-5 h-5 md:w-6 md:h-6 text-gray-400 absolute right-5 md:right-6 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <div class="relative transform hover:scale-[1.02] transition duration-300">
+                        <select id="filter-pengumuman-jenjang" class="w-full px-5 py-3 md:px-6 md:py-4 border border-gray-300 rounded-full shadow-lg focus:outline-none focus:ring-4 focus:ring-indigo-500/30 focus:border-indigo-500 text-base md:text-lg transition-all duration-300 bg-white appearance-none cursor-pointer">
+                            <option value="">Semua Jenjang</option>
+                            <option value="sma-smk">Khusus SMA / SMK</option>
+                            <option value="smp-mts">Khusus SMP / MTs</option>
+                            <option value="sd-mi">Khusus SD / MI</option>
+                            <option value="umum">Umum (Semua Jenjang)</option>
+                        </select>
+                        <svg class="w-5 h-5 md:w-6 md:h-6 text-gray-400 absolute right-5 md:right-6 top-1/2 transform -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                    <div class="relative transform hover:scale-[1.02] transition duration-300">
+                        <select id="filter-pengumuman-status" class="w-full px-5 py-3 md:px-6 md:py-4 border border-gray-300 rounded-full shadow-lg focus:outline-none focus:ring-4 focus:ring-indigo-500/30 focus:border-indigo-500 text-base md:text-lg transition-all duration-300 bg-white appearance-none cursor-pointer text-indigo-600 font-medium">
+                            <option value="aktif">Pengumuman Aktif</option>
+                            <option value="arsip">Pengumuman yang Diarsipkan</option>
+                        </select>
+                        <svg class="w-5 h-5 md:w-6 md:h-6 text-gray-400 absolute right-5 md:right-6 top-1/2 transform -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                </div>
+            </div>
+            <div id="pengumuman-container" class="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                <!-- Announcements will be rendered here -->
+            </div>
+        </div>
+
+        <!-- Admin Login View -->
+        <div id="admin-login-view" class="hidden flex justify-center items-center h-full mt-10 animate-fade-in">
+            <div class="bg-white p-8 md:p-10 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 transform transition-all mx-4 md:mx-0">
+                <div class="flex justify-center mb-6">
+                    <img src="https://i.ibb.co.com/j94P09Sb/Chat-GPT-Image-10-Mei-2026-21-40-08-removebg-preview.png" alt="Logo" class="h-16 w-16 md:h-20 md:w-20 drop-shadow-md animate-bounce" style="animation-duration: 3s;">
+                </div>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-center mb-8 text-gray-800">Portal Admin</h2>
+                <form id="login-form" class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+                        <input type="email" id="email" required class="w-full px-4 py-3 md:px-5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-500/30 focus:border-indigo-500 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Kata Sandi</label>
+                        <input type="password" id="password" required class="w-full px-4 py-3 md:px-5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-500/30 focus:border-indigo-500 outline-none transition-all">
+                    </div>
+                    <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold text-lg hover:bg-indigo-700 transform hover:-translate-y-1 hover:shadow-xl transition-all duration-300">Masuk</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard View -->
+        <div id="admin-dashboard-view" class="hidden animate-fade-in">
+            <h2 class="text-3xl md:text-4xl font-extrabold text-gray-800 mb-6 md:mb-8 tracking-tight">Dasbor Admin</h2>
+            
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-gray-100 mb-10 md:mb-12 transform hover:shadow-xl transition-shadow duration-300">
+                <h3 id="form-title" class="text-xl md:text-2xl font-bold mb-5 md:mb-6 text-indigo-900">Tambah Dokumen Baru (Tautan ImgBB atau PDF)</h3>
+                <form id="upload-form" class="flex flex-col gap-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Nama Dokumen / Penerima</label>
+                            <input type="text" id="doc-name" placeholder="Contoh: Sertifikat John Doe" required class="w-full px-4 py-3 md:px-5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-500/30 focus:border-indigo-500 outline-none transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Kategori</label>
+                            <select id="doc-category" required class="w-full px-4 py-3 md:px-5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-500/30 focus:border-indigo-500 outline-none transition-all bg-white">
+                                <option value="sertifikat">Sertifikat</option>
+                                <option value="piagam">Piagam</option>
+                                <option value="pengumuman">Pengumuman</option>
+                            </select>
+                        </div>
+                        <div id="jenjang-select-container" class="hidden">
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Jenjang Pendidikan</label>
+                            <select id="doc-jenjang" class="w-full px-4 py-3 md:px-5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-500/30 focus:border-indigo-500 outline-none transition-all bg-white">
+                                <option value="umum">Umum / Semua Jenjang</option>
+                                <option value="sma-smk">SMA / SMK</option>
+                                <option value="smp-mts">SMP / MTs</option>
+                                <option value="sd-mi">SD / MI</option>
+                            </select>
+                        </div>
+                        <div id="upload-status-container" class="hidden">
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Status Upload</label>
+                            <select id="doc-upload-status" class="w-full px-4 py-3 md:px-5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-500/30 focus:border-indigo-500 outline-none transition-all bg-white">
+                                <option value="aktif">Aktif (Ditampilkan)</option>
+                                <option value="nonaktif">Nonaktif (Disembunyikan)</option>
+                            </select>
+                        </div>
+                        <div id="cert-type-container">
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Jenis Sertifikat</label>
+                            <select id="doc-cert-type" class="w-full px-4 py-3 md:px-5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-500/30 focus:border-indigo-500 outline-none transition-all bg-white">
+                                <option value="">Pilih Jenis (Opsional)</option>
+                                <option value="emas">Emas</option>
+                                <option value="perak">Perak</option>
+                                <option value="perunggu">Perunggu</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- PDF Auto-Extractor Box (New Feature!) -->
+                    <div class="border-t border-gray-100 pt-5 mt-2">
+                        <div class="bg-indigo-50/40 border-2 border-dashed border-indigo-200 rounded-2xl p-6 flex flex-col items-center justify-center text-center relative hover:bg-indigo-50/70 transition-all duration-300 cursor-pointer group" id="pdf-upload-dropzone">
+                            <input type="file" id="pdf-file-input" accept="application/pdf" class="absolute inset-0 opacity-0 cursor-pointer z-10">
+                            <div class="p-4 bg-white rounded-full text-indigo-600 shadow-sm group-hover:scale-110 transition-transform duration-300 mb-3">
+                                <i class="fa-solid fa-file-pdf text-3xl"></i>
+                            </div>
+                            <h4 class="font-bold text-gray-800 text-sm md:text-base">Unggah File PDF</h4>
+                            <p class="text-xs text-gray-500 mt-1 max-w-md">Sistem akan otomatis mendeteksi jumlah halaman, memperlihatkan gambarnya, dan mengonversi halaman menjadi gambar secara otomatis!</p>
+                            
+                            <!-- PDF Loading / Status Badge -->
+                            <div id="pdf-status-badge" class="hidden mt-3 px-4 py-1.5 bg-indigo-600 text-white rounded-full text-xs font-bold animate-pulse flex items-center gap-1.5">
+                                <i class="fa-solid fa-circle-notch animate-spin"></i>
+                                <span id="pdf-status-text">Membaca PDF...</span>
+                            </div>
+                        </div>
+
+                        <!-- PDF Rendered Preview List -->
+                        <div id="pdf-preview-container" class="hidden mt-4 bg-gray-50 border border-gray-200 rounded-2xl p-4 animate-fade-in">
+                            <div class="flex items-center justify-between mb-3">
+                                <h5 class="font-bold text-gray-800 text-xs md:text-sm flex items-center gap-2">
+                                    <i class="fa-solid fa-images text-indigo-600"></i>
+                                    <span>Hasil Deteksi: <span id="pdf-detected-pages" class="text-indigo-600">0</span> Halaman Terdeteksi</span>
+                                </h5>
+                                <button type="button" onclick="resetUploadForm()" class="text-xs text-red-500 hover:text-red-700 font-bold flex items-center gap-1">
+                                    <i class="fa-solid fa-rotate-left"></i> Bersihkan PDF
+                                </button>
+                            </div>
+                            <div id="pdf-thumbnails-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 max-h-64 overflow-y-auto p-1">
+                                <!-- Thumbnails rendered dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Multi-Image/Page Input Section -->
+                    <div class="border-t border-gray-100 pt-5 mt-2">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <label class="block text-sm font-bold text-indigo-900">Tautan Gambar / Halaman Dokumen</label>
+                                <p class="text-xs text-gray-500">Otomatis terisi jika menggunakan PDF, atau Anda dapat memasukkan link manual. <span class="text-indigo-600 font-semibold">(Kosongkan jika ingin generate otomatis tanpa ImgBB)</span></p>
+                            </div>
+                            <button type="button" onclick="addImgRow()" class="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3.5 py-2 rounded-xl font-bold text-xs transition-all shadow-sm">
+                                <i class="fa-solid fa-plus"></i> Tambah Halaman Manual
+                            </button>
+                        </div>
+                        
+                        <div id="imgbb-links-container" class="space-y-3 max-h-80 overflow-y-auto pr-2">
+                            <!-- Dynamic inputs will be rendered here by JS -->
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3 pt-4 border-t border-gray-100">
+                        <button type="submit" class="w-full md:w-auto bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300 self-start">Simpan Dokumen</button>
+                        <button type="button" id="cancel-edit-btn" class="hidden w-full md:w-auto bg-gray-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-600 transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300 self-start">Batal Edit</button>
+                    </div>
+                </form>
+                <div id="upload-progress" class="mt-5 text-sm font-bold text-indigo-600 transition-all duration-300"></div>
+                
+                <!-- Direct Link Success Box -->
+                <div id="success-link-container" class="hidden mt-6 p-5 bg-emerald-50 border border-emerald-200 rounded-2xl animate-fade-in">
+                    <p class="text-emerald-800 font-bold text-base flex items-center gap-2">
+                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Dokumen Berhasil Disimpan!
+                    </p>
+                    <p class="text-emerald-600 text-sm mt-1">Berikut adalah link langsung menuju ke dokumen tersebut:</p>
+                    <div class="flex items-center gap-2 mt-3">
+                        <input type="text" id="success-direct-link" readonly class="w-full px-4 py-3 text-sm border border-emerald-300 rounded-xl bg-white select-all font-mono text-gray-700 focus:outline-none">
+                        <button onclick="copyCreatedLink()" class="bg-emerald-600 text-white px-5 py-3 rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all duration-300 shrink-0 shadow-md">Salin Link</button>
+                    </div>
+
+                    <!-- QR Code Section -->
+                    <div class="mt-4 pt-4 border-t border-emerald-200 flex flex-col sm:flex-row items-center gap-4">
+                        <img id="success-qr-img" src="" alt="QR Code" class="w-32 h-32 border border-emerald-200 p-2 bg-white rounded-xl shadow-inner">
+                        <div class="text-center sm:text-left">
+                            <h5 class="font-bold text-emerald-800 text-sm">Kode QR Siap Pakai!</h5>
+                            <p class="text-xs text-emerald-600 mt-1 max-w-xs">Scan Kode QR ini untuk langsung menuju ke halaman dokumen/nama penerima secara instan.</p>
+                            <a id="success-qr-download" href="#" target="_blank" download="qrcode.png" class="inline-flex items-center gap-1.5 mt-2.5 bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-emerald-700 transition-all shadow-sm">
+                                <i class="fa-solid fa-download"></i> Unduh Kode QR
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Control Header -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                <h3 class="text-2xl md:text-3xl font-bold text-gray-800">Kelola Dokumen</h3>
+                <div class="relative w-full md:w-72">
+                    <input type="text" id="search-admin-docs" placeholder="Cari di dasbor admin..." class="w-full px-4 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <svg class="w-4 h-4 text-gray-400 absolute right-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+            </div>
+
+            <!-- Admin Category Tabs with Dynamic Counters (New Feature) -->
+            <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-200 pb-4">
+                <button onclick="setAdminTab('all')" id="admin-tab-all" class="px-4 py-2 rounded-full text-xs md:text-sm font-bold bg-indigo-600 text-white shadow-md transition-all duration-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-folder-open"></i> Semua (<span id="count-all">0</span>)
+                </button>
+                <button onclick="setAdminTab('sertifikat')" id="admin-tab-sertifikat" class="px-4 py-2 rounded-full text-xs md:text-sm font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all duration-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-award"></i> Sertifikat (<span id="count-sertifikat">0</span>)
+                </button>
+                <button onclick="setAdminTab('piagam')" id="admin-tab-piagam" class="px-4 py-2 rounded-full text-xs md:text-sm font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all duration-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-certificate"></i> Piagam (<span id="count-piagam">0</span>)
+                </button>
+                <button onclick="setAdminTab('pengumuman')" id="admin-tab-pengumuman" class="px-4 py-2 rounded-full text-xs md:text-sm font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all duration-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-bullhorn"></i> Pengumuman (<span id="count-pengumuman">0</span>)
+                </button>
+            </div>
+
+            <div id="admin-docs-container" class="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                <!-- Admin documents will be rendered here -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Navigation (Bottom App-Like) -->
+    <nav class="bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.08)] py-2 md:py-3.5 px-4 md:px-6 fixed bottom-0 left-0 right-0 z-[90] border-t border-gray-100 transition-all duration-300">
+        <div class="max-w-7xl mx-auto flex flex-row justify-between items-center gap-2">
+            
+            <!-- Desktop Brand Info (Hidden on Mobile) -->
+            <a href="#sertifikat" class="hidden md:flex items-center gap-3 transform hover:scale-105 transition duration-300 shrink-0">
+                <img src="https://i.ibb.co.com/j94P09Sb/Chat-GPT-Image-10-Mei-2026-21-40-08-removebg-preview.png" alt="Pusat Prestasi Manzcodecbt Logo" class="h-10 w-10 object-contain drop-shadow-md">
+                <div class="flex flex-col">
+                    <span class="text-xl font-bold text-indigo-600 tracking-tight">Pusat Prestasi Manzcodecbt</span>
+                </div>
+            </a>
+
+            <!-- Navigation Tabs/Links (Full width on mobile, right-aligned on desktop) -->
+            <div class="flex items-center justify-around md:justify-end w-full md:w-auto gap-1 sm:gap-2 md:gap-4 overflow-x-auto hide-scrollbar">
+                
+                <!-- Tab: Sertifikat -->
+                <a href="#sertifikat" class="nav-tab flex flex-col md:flex-row items-center gap-1 md:gap-2 text-gray-500 hover:text-indigo-600 font-medium transition-all duration-300 py-1.5 px-3 rounded-xl text-center">
+                    <i class="fa-solid fa-award text-lg md:text-base"></i>
+                    <span class="text-[10px] md:text-sm font-semibold tracking-wide whitespace-nowrap">Sertifikat</span>
+                </a>
+                
+                <!-- Tab: Piagam -->
+                <a href="#piagam" class="nav-tab flex flex-col md:flex-row items-center gap-1 md:gap-2 text-gray-500 hover:text-indigo-600 font-medium transition-all duration-300 py-1.5 px-3 rounded-xl text-center">
+                    <i class="fa-solid fa-certificate text-lg md:text-base"></i>
+                    <span class="text-[10px] md:text-sm font-semibold tracking-wide whitespace-nowrap">Piagam</span>
+                </a>
+                
+                <!-- Tab: Pengumuman -->
+                <a href="#pengumuman" class="nav-tab flex flex-col md:flex-row items-center gap-1 md:gap-2 text-gray-500 hover:text-indigo-600 font-medium transition-all duration-300 py-1.5 px-3 rounded-xl text-center">
+                    <i class="fa-solid fa-bullhorn text-lg md:text-base"></i>
+                    <span class="text-[10px] md:text-sm font-semibold tracking-wide whitespace-nowrap">Pengumuman</span>
+                </a>
+                
+                <!-- Tab: Dasbor (Conditional) -->
+                <a href="#admin" id="admin-link" class="nav-tab hidden flex flex-col md:flex-row items-center gap-1 md:gap-2 text-gray-500 hover:text-indigo-600 font-medium transition-all duration-300 py-1.5 px-3 rounded-xl text-center">
+                    <i class="fa-solid fa-user-shield text-lg md:text-base"></i>
+                    <span class="text-[10px] md:text-sm font-semibold tracking-wide whitespace-nowrap">Dasbor</span>
+                </a>
+                
+                <!-- Tab: Keluar (Conditional) -->
+                <button id="logout-btn" class="hidden flex flex-col md:flex-row items-center gap-1 md:gap-2 text-red-500 hover:text-red-600 font-medium transition-all duration-300 py-1.5 px-3 rounded-xl text-center">
+                    <i class="fa-solid fa-right-from-bracket text-lg md:text-base"></i>
+                    <span class="text-[10px] md:text-sm font-semibold tracking-wide whitespace-nowrap">Keluar</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Firebase SDK & Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-analytics.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, deleteDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBElzImRbBR3yt-0YfpmBAR-trW8l7s3pQ",
+            authDomain: "certifymanz.firebaseapp.com",
+            projectId: "certifymanz",
+            storageBucket: "certifymanz.firebasestorage.app",
+            messagingSenderId: "870543683715",
+            appId: "1:870543683715:web:c34d0d7f624db5e52eabb6",
+            measurementId: "G-0R61W5WH5S"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let allDocs = [];
+        let currentModalDocName = 'dokumen';
+        let editingDocId = null;
+        let currentAdminTab = 'all';
+
+        // Carousel state variables
+        let currentModalUrls = [];
+        let currentModalIndex = 0;
+
+        // Configure PDF.js Worker
+        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+        // Helper to generate consistent slugs
+        const getSlug = (name) => encodeURIComponent(name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''));
+
+        // Beautiful Dynamic SVG Placeholder Generator for documents with NO image link
+        function generatePlaceholderSvg(name, category) {
+            const cleanName = name.replace(/["']/g, "");
+            const cleanCategory = category.charAt(0).toUpperCase() + category.slice(1);
+            const dateStr = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+            
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+                <defs>
+                    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#f8fafc"/>
+                        <stop offset="100%" stop-color="#e2e8f0"/>
+                    </linearGradient>
+                    <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#d97706"/>
+                        <stop offset="50%" stop-color="#fbbf24"/>
+                        <stop offset="100%" stop-color="#f59e0b"/>
+                    </linearGradient>
+                </defs>
+                <rect width="800" height="600" fill="url(#bg-grad)"/>
+                
+                <!-- Borders -->
+                <rect x="25" y="25" width="750" height="550" fill="none" stroke="#4f46e5" stroke-width="6" rx="12"/>
+                <rect x="40" y="40" width="720" height="520" fill="none" stroke="#fbbf24" stroke-width="2" rx="8"/>
+                
+                <!-- Corner Decorations -->
+                <path d="M 25 80 L 25 25 L 80 25" fill="none" stroke="#4f46e5" stroke-width="6"/>
+                <path d="M 775 80 L 775 25 L 720 25" fill="none" stroke="#4f46e5" stroke-width="6"/>
+                <path d="M 25 520 L 25 575 L 80 575" fill="none" stroke="#4f46e5" stroke-width="6"/>
+                <path d="M 775 520 L 775 575 L 720 575" fill="none" stroke="#4f46e5" stroke-width="6"/>
+
+                <!-- Content -->
+                <text x="400" y="110" font-family="'Space Grotesk', 'Inter', sans-serif" font-size="18" font-weight="900" fill="#4f46e5" text-anchor="middle" letter-spacing="6">DOKUMEN PRESTASI RESMI</text>
+                <text x="400" y="140" font-family="'Inter', sans-serif" font-size="13" font-weight="600" fill="#64748b" text-anchor="middle" letter-spacing="1">PUSAT PRESTASI MANZCODECBT</text>
+                
+                <line x1="250" y1="180" x2="550" y2="180" stroke="#cbd5e1" stroke-width="2"/>
+                
+                <text x="400" y="230" font-family="'Inter', sans-serif" font-size="16" font-weight="500" fill="#475569" text-anchor="middle">Diberikan Kepada / Mengenai:</text>
+                <text x="400" y="290" font-family="'Space Grotesk', 'Inter', sans-serif" font-size="34" font-weight="900" fill="#1e293b" text-anchor="middle">${cleanName}</text>
+                
+                <text x="400" y="350" font-family="'Inter', sans-serif" font-size="16" fill="#475569" text-anchor="middle">Telah secara resmi dinyatakan valid dan tercatat dalam sistem database.</text>
+                <text x="400" y="380" font-family="'Space Grotesk', 'Inter', sans-serif" font-size="18" font-weight="700" fill="#d97706" text-anchor="middle">Kategori: ${cleanCategory}</text>
+                
+                <line x1="250" y1="420" x2="550" y2="420" stroke="#cbd5e1" stroke-width="2"/>
+                
+                <!-- Badge -->
+                <g transform="translate(400, 485)">
+                    <circle cx="0" cy="0" r="42" fill="url(#gold-grad)" filter="drop-shadow(0px 4px 6px rgba(0,0,0,0.15))"/>
+                    <circle cx="0" cy="0" r="36" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="4,2"/>
+                    <text x="0" y="5" font-family="'Space Grotesk', sans-serif" font-size="11" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="1">VERIFIED</text>
+                </g>
+                
+                <text x="400" y="555" font-family="'Inter', sans-serif" font-size="11" fill="#94a3b8" text-anchor="middle">Sistem Sertifikasi Digital Manzcodecbt • ${dateStr}</text>
+            </svg>`;
+            return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+        }
+
+        // Toast Helpers
+        window.closeToast = function() {
+            const toast = document.getElementById('realtime-toast');
+            if (toast) {
+                toast.classList.add('opacity-0', '-translate-y-24');
+                toast.classList.remove('opacity-100', 'translate-y-0');
+            }
+        };
+
+        window.showRealtimeNotification = function(newDoc) {
+            const toast = document.getElementById('realtime-toast');
+            const msgEl = document.getElementById('toast-message');
+            if (!toast || !msgEl) return;
+            
+            let categoryLabel = 'Dokumen';
+            if (newDoc.category === 'sertifikat') categoryLabel = 'Sertifikat';
+            else if (newDoc.category === 'piagam') categoryLabel = 'Piagam';
+            else if (newDoc.category === 'pengumuman') categoryLabel = 'Pengumuman';
+
+            msgEl.innerText = `${categoryLabel} baru "${newDoc.name}" telah ditambahkan secara real-time tanpa refresh!`;
+            
+            toast.classList.remove('opacity-0', '-translate-y-24');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            // Auto close after 6 seconds
+            setTimeout(() => {
+                window.closeToast();
+            }, 6000);
+        };
+
+        // Open Modal Carousel using Document ID
+        window.openModalById = function(id, slug) {
+            const docObj = allDocs.find(d => d.id === id);
+            if (!docObj) return;
+
+            const docUrls = docObj.urls || [docObj.url];
+            window.openModal(docUrls, slug, docObj.name);
+        };
+
+        // Make global functions for inline HTML event handlers
+        window.openModal = function(urls, slug, name) {
+            if (typeof urls === 'string') {
+                if (urls.startsWith('[') && urls.endsWith(']')) {
+                    try {
+                        currentModalUrls = JSON.parse(urls);
+                    } catch(e) {
+                        currentModalUrls = [urls];
+                    }
+                } else {
+                    currentModalUrls = [urls];
+                }
+            } else if (Array.isArray(urls)) {
+                currentModalUrls = urls;
+            } else {
+                currentModalUrls = [];
+            }
+
+            if (currentModalUrls.length === 0) return;
+
+            currentModalIndex = 0;
+            currentModalDocName = name || 'dokumen';
+            
+            updateModalImage();
+            document.getElementById('image-modal').classList.remove('hidden');
+            
+            if (slug) {
+                const baseHash = window.location.hash.split('/')[0] || '#sertifikat';
+                window.history.pushState(null, '', `${baseHash}/${slug}`);
+            }
+        };
+
+        window.updateModalImage = function() {
+            const imgEl = document.getElementById('modal-img');
+            const counterEl = document.getElementById('modal-page-counter');
+            const prevBtn = document.getElementById('modal-prev-btn');
+            const nextBtn = document.getElementById('modal-next-btn');
+            const dotsContainer = document.getElementById('modal-dots-container');
+
+            if (currentModalUrls.length === 0) return;
+
+            // Set source
+            imgEl.src = currentModalUrls[currentModalIndex];
+
+            // Counter Text
+            counterEl.innerHTML = `<i class="fa-solid fa-file-image text-indigo-400"></i> Halaman ${currentModalIndex + 1} dari ${currentModalUrls.length}`;
+
+            // Handle Nav elements visibility
+            if (currentModalUrls.length <= 1) {
+                prevBtn.classList.add('hidden');
+                nextBtn.classList.add('hidden');
+                dotsContainer.classList.add('hidden');
+            } else {
+                prevBtn.classList.remove('hidden');
+                nextBtn.classList.remove('hidden');
+                dotsContainer.classList.remove('hidden');
+            }
+
+            // Generate dots
+            dotsContainer.innerHTML = '';
+            currentModalUrls.forEach((_, idx) => {
+                const dot = document.createElement('button');
+                dot.className = `w-2.5 h-2.5 rounded-full transition-all duration-300 ${idx === currentModalIndex ? 'bg-indigo-500 scale-125 w-6' : 'bg-gray-500 hover:bg-gray-400'}`;
+                dot.onclick = () => {
+                    currentModalIndex = idx;
+                    updateModalImage();
+                };
+                dotsContainer.appendChild(dot);
+            });
+        };
+
+        window.prevModalImage = function() {
+            if (currentModalUrls.length <= 1) return;
+            currentModalIndex = (currentModalIndex - 1 + currentModalUrls.length) % currentModalUrls.length;
+            updateModalImage();
+        };
+
+        window.nextModalImage = function() {
+            if (currentModalUrls.length <= 1) return;
+            currentModalIndex = (currentModalIndex + 1) % currentModalUrls.length;
+            updateModalImage();
+        };
+
+        // Keyboard navigation for modal
+        document.addEventListener('keydown', (e) => {
+            const modal = document.getElementById('image-modal');
+            if (modal && !modal.classList.contains('hidden')) {
+                if (e.key === 'ArrowLeft') {
+                    window.prevModalImage();
+                } else if (e.key === 'ArrowRight') {
+                    window.nextModalImage();
+                } else if (e.key === 'Escape') {
+                    window.closeModal();
+                }
+            }
+        });
+
+        window.closeModal = function() {
+            document.getElementById('image-modal').classList.add('hidden');
+            document.getElementById('modal-img').src = '';
+            currentModalDocName = 'dokumen';
+            currentModalUrls = [];
+            currentModalIndex = 0;
+            
+            const baseHash = window.location.hash.split('/')[0] || '#sertifikat';
+            window.history.pushState(null, '', baseHash);
+        };
+
+        window.downloadImage = async function() {
+            const imgUrl = currentModalUrls[currentModalIndex];
+            if (!imgUrl) return;
+            
+            try {
+                const response = await fetch(imgUrl);
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = blobUrl;
+                
+                let ext = 'jpg';
+                if(imgUrl.toLowerCase().includes('.png')) ext = 'png';
+                else if(imgUrl.toLowerCase().includes('.jpeg')) ext = 'jpeg';
+                
+                let filename = currentModalDocName.replace(/[^a-zA-Z0-9]/g, '_');
+                if (currentModalUrls.length > 1) {
+                    filename += `_hal_${currentModalIndex + 1}`;
+                }
+                
+                a.download = `${filename}.${ext}`;
+                document.body.appendChild(a);
+                a.click();
+                
+                window.URL.revokeObjectURL(blobUrl);
+                document.body.removeChild(a);
+            } catch (err) {
+                const a = document.createElement('a');
+                a.href = imgUrl;
+                a.target = '_blank';
+                a.download = currentModalDocName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+        };
+
+        // QR Code Modal operations
+        let activeQrLink = '';
+        window.showQrModal = function(category, slug, name) {
+            const directLink = `${window.location.origin}${''}#${category}/${slug}`;
+            activeQrLink = directLink;
+            
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(directLink)}`;
+            
+            document.getElementById('qr-modal-doc-name').innerText = name;
+            document.getElementById('qr-modal-img').src = qrUrl;
+            document.getElementById('qr-modal-download').href = qrUrl;
+            document.getElementById('qr-modal').classList.remove('hidden');
+        };
+
+        window.closeQrModal = function() {
+            document.getElementById('qr-modal').classList.add('hidden');
+        };
+
+        window.copyQrLink = function() {
+            if (activeQrLink) {
+                navigator.clipboard.writeText(activeQrLink).then(() => {
+                    alert('Link langsung berhasil disalin!');
+                });
+            }
+        };
+
+        window.deleteDocument = async function(id) {
+            if(confirm("Apakah Anda yakin ingin menghapus dokumen ini?")) {
+                try {
+                    await deleteDoc(doc(db, "documents", id));
+                    alert("Dokumen berhasil dihapus.");
+                    forceReloadDocs();
+                } catch(e) {
+                    alert("Gagal menghapus dokumen: " + e.message);
+                }
+            }
+        };
+
+        // Toggle Archive Status
+        window.toggleArchiveDocument = async function(id, currentStatus) {
+            try {
+                await updateDoc(doc(db, "documents", id), {
+                    isArchived: !currentStatus
+                });
+                forceReloadDocs();
+            } catch(e) {
+                alert("Gagal mengubah status arsip: " + e.message);
+            }
+        };
+
+        // Toggle Active/Inactive Status (New Feature - Tanpa Edit)
+        window.toggleActiveStatus = async function(id, currentStatus) {
+            try {
+                await updateDoc(doc(db, "documents", id), {
+                    isActive: !currentStatus
+                });
+                forceReloadDocs();
+            } catch(e) {
+                alert("Gagal mengubah status aktif: " + e.message);
+            }
+        };
+
+        // Edit Document
+        window.editDocument = function(id) {
+            const docToEdit = allDocs.find(d => d.id === id);
+            if (!docToEdit) return;
+            
+            editingDocId = id;
+            document.getElementById('form-title').innerText = "Edit Dokumen (Ubah Gambar / Detail)";
+            document.getElementById('doc-name').value = docToEdit.name || '';
+            document.getElementById('doc-category').value = docToEdit.category || 'sertifikat';
+            
+            document.getElementById('doc-category').dispatchEvent(new Event('change'));
+            
+            document.getElementById('doc-cert-type').value = docToEdit.certType || '';
+            document.getElementById('doc-jenjang').value = docToEdit.jenjang || 'umum';
+            document.getElementById('doc-upload-status').value = docToEdit.uploadStatus || 'aktif';
+            
+            // Populate dynamic image fields
+            const container = document.getElementById('imgbb-links-container');
+            container.innerHTML = '';
+            
+            const docUrls = docToEdit.urls || [docToEdit.url];
+            docUrls.forEach((u) => {
+                // Ignore generated placeholders in input link field for editing
+                if (u && !u.startsWith('data:image/svg+xml')) {
+                    addImgRow(u);
+                }
+            });
+            
+            // Ensure at least one empty row if none existed or all were placeholders
+            if (container.getElementsByClassName('imgbb-link-row').length === 0) {
+                addImgRow('');
+            }
+            
+            updateRowLabels();
+            
+            const submitBtn = document.querySelector('#upload-form button[type="submit"]');
+            submitBtn.innerText = 'Perbarui Dokumen';
+            submitBtn.className = "w-full md:w-auto bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300 self-start";
+            
+            document.getElementById('cancel-edit-btn').classList.remove('hidden');
+            document.getElementById('upload-form').scrollIntoView({ behavior: 'smooth' });
+        };
+
+        // Add dynamic image row
+        window.addImgRow = function(val = '') {
+            const container = document.getElementById('imgbb-links-container');
+            const rowCount = container.getElementsByClassName('imgbb-link-row').length;
+            
+            const row = document.createElement('div');
+            row.className = 'flex items-center gap-2 imgbb-link-row animate-fade-in';
+            row.innerHTML = `
+                <span class="text-xs font-bold text-gray-400 w-12 shrink-0">Hal ${rowCount + 1}</span>
+                <input type="text" value="${val}" placeholder="https://i.ibb.co/.../image.png (Opsional)" class="imgbb-input-link w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-500/30 focus:border-indigo-500 outline-none transition-all text-sm">
+                <button type="button" onclick="removeImgRow(this)" class="p-3 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl transition-all shrink-0">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            `;
+            container.appendChild(row);
+            updateRowLabels();
+        };
+
+        window.removeImgRow = function(btn) {
+            const container = document.getElementById('imgbb-links-container');
+            const rows = container.getElementsByClassName('imgbb-link-row');
+            if (rows.length > 1) {
+                btn.closest('.imgbb-link-row').remove();
+                updateRowLabels();
+            } else {
+                alert('Minimal harus ada 1 gambar/halaman!');
+            }
+        };
+
+        function updateRowLabels() {
+            const container = document.getElementById('imgbb-links-container');
+            const rows = container.getElementsByClassName('imgbb-link-row');
+            Array.from(rows).forEach((row, idx) => {
+                row.querySelector('span').innerText = `Hal ${idx + 1}`;
+                const trashBtn = row.querySelector('button');
+                if (rows.length === 1) {
+                    trashBtn.classList.add('invisible');
+                } else {
+                    trashBtn.classList.remove('invisible');
+                }
+            });
+        }
+
+        // Reset Form helper
+        window.resetUploadForm = function() {
+            editingDocId = null;
+            document.getElementById('form-title').innerText = "Tambah Dokumen Baru (Tautan ImgBB atau PDF)";
+            document.getElementById('doc-name').value = '';
+            document.getElementById('doc-category').value = 'sertifikat';
+            document.getElementById('doc-category').dispatchEvent(new Event('change'));
+            document.getElementById('doc-cert-type').value = '';
+            document.getElementById('doc-jenjang').value = 'umum';
+            document.getElementById('doc-upload-status').value = 'aktif';
+            
+            // Reset PDF UI
+            document.getElementById('pdf-file-input').value = '';
+            document.getElementById('pdf-status-badge').classList.add('hidden');
+            document.getElementById('pdf-preview-container').classList.add('hidden');
+            document.getElementById('pdf-thumbnails-grid').innerHTML = '';
+
+            // Clear dynamic images and insert one empty
+            const container = document.getElementById('imgbb-links-container');
+            container.innerHTML = '';
+            addImgRow('');
+            updateRowLabels();
+            
+            const submitBtn = document.querySelector('#upload-form button[type="submit"]');
+            submitBtn.innerText = 'Simpan Dokumen';
+            submitBtn.className = "w-full md:w-auto bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300 self-start";
+            
+            document.getElementById('cancel-edit-btn').classList.add('hidden');
+            document.getElementById('success-link-container').classList.add('hidden');
+        };
+
+        // Copy Created Link helper
+        window.copyCreatedLink = function() {
+            const linkInput = document.getElementById('success-direct-link');
+            linkInput.select();
+            document.execCommand('copy');
+            alert('Link berhasil disalin ke papan klip!');
+        };
+
+        // Copy Link directly from card
+        window.copyDocLink = function(category, slug) {
+            const directLink = `${window.location.origin}${''}#${category}/${slug}`;
+            navigator.clipboard.writeText(directLink).then(() => {
+                alert('Link langsung dokumen berhasil disalin!');
+            }).catch(err => {
+                const el = document.createElement('textarea');
+                el.value = directLink;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                alert('Link langsung dokumen berhasil disalin!');
+            });
+        };
+
+        // HTML/JS Integration for PDF Auto-Detection & Image Conversion
+        const pdfFileInput = document.getElementById('pdf-file-input');
+        const pdfStatusBadge = document.getElementById('pdf-status-badge');
+        const pdfStatusText = document.getElementById('pdf-status-text');
+        const pdfPreviewContainer = document.getElementById('pdf-preview-container');
+        const pdfDetectedPages = document.getElementById('pdf-detected-pages');
+        const pdfThumbnailsGrid = document.getElementById('pdf-thumbnails-grid');
+
+        if (pdfFileInput) {
+            pdfFileInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                if (file.type !== 'application/pdf') {
+                    alert('Harap unggah file dokumen PDF yang valid!');
+                    pdfFileInput.value = '';
+                    return;
+                }
+
+                // Show processing indicator
+                pdfStatusBadge.classList.remove('hidden');
+                pdfStatusText.innerText = 'Membaca PDF & Mendeteksi Halaman...';
+                pdfStatusBadge.className = 'mt-3 px-4 py-1.5 bg-amber-500 text-white rounded-full text-xs font-bold animate-pulse flex items-center gap-1.5';
+
+                try {
+                    const result = await processPDF(file);
+                    
+                    // Update badge with page count
+                    pdfStatusText.innerText = `Terdeteksi ${result.numPages} Halaman`;
+                    pdfStatusBadge.className = 'mt-3 px-4 py-1.5 bg-emerald-600 text-white rounded-full text-xs font-bold flex items-center gap-1.5';
+
+                    // Update preview container
+                    pdfPreviewContainer.classList.remove('hidden');
+                    pdfDetectedPages.innerText = result.numPages;
+                    pdfThumbnailsGrid.innerHTML = '';
+
+                    // Clear existing manual link inputs
+                    const container = document.getElementById('imgbb-links-container');
+                    container.innerHTML = '';
+
+                    // Automatically switch category to 'pengumuman' if not already set
+                    const categorySelect = document.getElementById('doc-category');
+                    if (categorySelect.value !== 'pengumuman') {
+                        categorySelect.value = 'pengumuman';
+                        categorySelect.dispatchEvent(new Event('change'));
+                    }
+
+                    result.imageUrls.forEach((url, idx) => {
+                        // Create Thumbnail element to show image
+                        const thumb = document.createElement('div');
+                        thumb.className = 'relative border border-gray-200 rounded-xl overflow-hidden bg-white aspect-[3/4] shadow-sm group hover:scale-105 transition-all duration-300';
+                        thumb.innerHTML = `
+                            <img src="${url}" class="object-cover w-full h-full">
+                            <div class="absolute bottom-0 inset-x-0 bg-black/70 text-white text-[10px] py-1 text-center font-bold">
+                                Halaman ${idx + 1}
+                            </div>
+                        `;
+                        pdfThumbnailsGrid.appendChild(thumb);
+
+                        // Populate dynamic input fields with generated Base64 Data URLs
+                        addImgRow(url);
+                    });
+
+                    // Set default document name from file name if empty
+                    const nameInput = document.getElementById('doc-name');
+                    if (nameInput && !nameInput.value.trim()) {
+                        nameInput.value = file.name.replace(/\.[^/.]+$/, "");
+                    }
+
+                } catch (err) {
+                    console.error(err);
+                    pdfStatusText.innerText = 'Gagal memproses PDF!';
+                    pdfStatusBadge.className = 'mt-3 px-4 py-1.5 bg-red-600 text-white rounded-full text-xs font-bold flex items-center gap-1.5';
+                    alert('Gagal membaca PDF: ' + err.message);
+                }
+            });
+        }
+
+        // PDF renderer helper function
+        async function processPDF(file) {
+            const reader = new FileReader();
+            return new Promise((resolve, reject) => {
+                reader.onload = async function() {
+                    try {
+                        const typedarray = new Uint8Array(this.result);
+                        const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
+                        const numPages = pdf.numPages;
+                        const imageUrls = [];
+                        
+                        // Render each page to canvas -> convert to optimized Data URL
+                        for (let i = 1; i <= numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            let viewport = page.getViewport({ scale: 1.2 }); // scale for decent readable resolution
+                            
+                            // Downscale slightly if too large to prevent Firebase document size limit issues
+                            if (viewport.width > 800) {
+                                const scale = 800 / viewport.width;
+                                viewport = page.getViewport({ scale: scale });
+                            }
+
+                            const canvas = document.createElement('canvas');
+                            const context = canvas.getContext('2d');
+                            canvas.height = viewport.height;
+                            canvas.width = viewport.width;
+                            
+                            await page.render({ canvasContext: context, viewport: viewport }).promise;
+                            
+                            // Convert to JPEG with 0.65 compression to maintain readability while keeping file size small
+                            const dataUrl = canvas.toDataURL('image/jpeg', 0.65);
+                            imageUrls.push(dataUrl);
+                        }
+                        resolve({ numPages, imageUrls });
+                    } catch (err) {
+                        reject(err);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        // UI Views
+        const views = {
+            sertifikat: document.getElementById('sertifikat-view'),
+            piagam: document.getElementById('piagam-view'),
+            pengumuman: document.getElementById('pengumuman-view'),
+            login: document.getElementById('admin-login-view'),
+            dashboard: document.getElementById('admin-dashboard-view')
+        };
+        const logoutBtn = document.getElementById('logout-btn');
+        const adminLink = document.getElementById('admin-link');
+
+        // Update Bottom Nav Active Styling
+        function updateActiveTabs() {
+            const hash = window.location.hash || '#sertifikat';
+            const baseHash = hash.split('/')[0];
+            
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                const href = tab.getAttribute('href');
+                if (href === baseHash) {
+                    tab.classList.add('text-indigo-600', 'bg-indigo-50', 'font-bold');
+                    tab.classList.remove('text-gray-500');
+                } else {
+                    tab.classList.remove('text-indigo-600', 'bg-indigo-50', 'font-bold');
+                    tab.classList.add('text-gray-500');
+                }
+            });
+        }
+
+        // Router
+        async function handleRoute() {
+            const hash = window.location.hash || '#sertifikat';
+            const hashParts = hash.split('/');
+            const baseHash = hashParts[0];
+            const slug = hashParts[1];
+
+            updateActiveTabs();
+
+            if (!slug) {
+                document.getElementById('image-modal').classList.add('hidden');
+                document.getElementById('modal-img').src = '';
+            }
+
+            Object.values(views).forEach(view => {
+                if (view) view.classList.add('hidden');
+            });
+
+            const viewKey = baseHash.replace('#', '');
+            const currentView = views[viewKey] || views.sertifikat;
+
+            if (baseHash === '#admin') {
+                if (currentUser) {
+                    views.dashboard.classList.remove('hidden');
+                    await loadAdminDocuments();
+                } else {
+                    views.login.classList.remove('hidden');
+                }
+            } else {
+                currentView.classList.remove('hidden');
+                if(baseHash === '#sertifikat' || baseHash === '') await loadPublicDocuments('sertifikat');
+                if(baseHash === '#piagam') await loadPublicDocuments('piagam');
+                if(baseHash === '#pengumuman') await loadPublicDocuments('pengumuman');
+            }
+
+            if (slug && allDocs.length > 0) {
+                const docToOpen = allDocs.find(d => getSlug(d.name) === slug);
+                if (docToOpen) {
+                    const docUrls = docToOpen.urls || [docToOpen.url];
+                    window.openModal(docUrls, slug, docToOpen.name);
+                }
+            }
+        }
+
+        window.addEventListener('hashchange', handleRoute);
+
+        // Auth Listener
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (user) {
+                logoutBtn.classList.remove('hidden');
+                adminLink.classList.remove('hidden');
+            } else {
+                logoutBtn.classList.add('hidden');
+                adminLink.classList.add('hidden');
+            }
+            handleRoute();
+        });
+
+        // Login
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                window.location.hash = '#admin';
+            } catch (err) {
+                alert("Login gagal: " + err.message);
+            }
+        });
+
+        // Logout
+        logoutBtn.addEventListener('click', async () => {
+            await signOut(auth);
+            window.location.hash = '#sertifikat';
+        });
+
+        // Category changes -> handle field visibility
+        document.getElementById('doc-category').addEventListener('change', (e) => {
+            const certTypeSelect = document.getElementById('doc-cert-type');
+            const certTypeContainer = document.getElementById('cert-type-container');
+            const jenjangContainer = document.getElementById('jenjang-select-container');
+            const uploadStatusContainer = document.getElementById('upload-status-container');
+            
+            if (e.target.value !== 'sertifikat') {
+                certTypeSelect.value = '';
+                certTypeSelect.disabled = true;
+                certTypeContainer.classList.add('hidden');
+            } else {
+                certTypeSelect.disabled = false;
+                certTypeContainer.classList.remove('hidden');
+            }
+
+            if (e.target.value === 'pengumuman') {
+                jenjangContainer.classList.remove('hidden');
+                uploadStatusContainer.classList.remove('hidden');
+            } else {
+                jenjangContainer.classList.add('hidden');
+                uploadStatusContainer.classList.add('hidden');
+                document.getElementById('doc-jenjang').value = 'umum';
+                document.getElementById('doc-upload-status').value = 'aktif';
+            }
+        });
+
+        // Cancel Edit
+        document.getElementById('cancel-edit-btn').addEventListener('click', () => {
+            resetUploadForm();
+        });
+
+        // Upload or Update (Save ImgBB Link / Edit details)
+        document.getElementById('upload-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nameInput = document.getElementById('doc-name');
+            const categoryInput = document.getElementById('doc-category');
+            const certTypeInput = document.getElementById('doc-cert-type');
+            const jenjangInput = document.getElementById('doc-jenjang');
+            const uploadStatusInput = document.getElementById('doc-upload-status');
+            const progressEl = document.getElementById('upload-progress');
+            
+            const name = nameInput.value.trim();
+            const category = categoryInput.value;
+            const certType = category === 'sertifikat' ? certTypeInput.value : '';
+            const jenjang = category === 'pengumuman' ? jenjangInput.value : 'umum';
+            const uploadStatus = category === 'pengumuman' ? uploadStatusInput.value : 'aktif';
+
+            // Gather all dynamic link inputs
+            const linkInputs = document.querySelectorAll('.imgbb-input-link');
+            let urls = Array.from(linkInputs).map(input => input.value.trim()).filter(url => url !== '');
+
+            // Fallback Generator: If no ImgBB link is provided, create a stunning SVG placeholder so it remains active and visible on the site
+            if (urls.length === 0) {
+                const generatedSvg = generatePlaceholderSvg(name, category);
+                urls = [generatedSvg];
+            } else {
+                // Validate all links (Support direct links, ImgBB, local Base64 URLs, and SVG Data URLs)
+                const invalidUrls = urls.filter(url => {
+                    const isImage = /\.(jpeg|jpg|png)$/i.test(url);
+                    const isImgBB = url.includes('ibb.co');
+                    const isBase64 = url.startsWith('data:image/');
+                    const isSvgData = url.startsWith('data:image/svg+xml');
+                    return !isImage && !isImgBB && !isBase64 && !isSvgData;
+                });
+
+                if (invalidUrls.length > 0) {
+                    progressEl.innerText = 'Error: Ada URL atau Data URL yang tidak valid!';
+                    progressEl.classList.remove('text-indigo-600');
+                    progressEl.classList.add('text-red-500');
+                    return;
+                }
+            }
+
+            progressEl.classList.remove('text-red-500');
+            progressEl.classList.add('text-indigo-600');
+            progressEl.innerText = editingDocId ? 'Memperbarui dokumen...' : 'Menyimpan dokumen secara aman...';
+
+            try {
+                if (editingDocId) {
+                    await updateDoc(doc(db, "documents", editingDocId), {
+                        name: name,
+                        category: category,
+                        certType: certType,
+                        jenjang: jenjang,
+                        uploadStatus: uploadStatus,
+                        url: urls[0], // fallback for backward compatibility
+                        urls: urls
+                    });
+                    
+                    progressEl.innerText = 'Dokumen berhasil diperbarui!';
+                    
+                    const slug = getSlug(name);
+                    const directLink = `${window.location.origin}${''}#${category}/${slug}`;
+                    document.getElementById('success-direct-link').value = directLink;
+                    
+                    // Generate QR code for the direct link
+                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(directLink)}`;
+                    document.getElementById('success-qr-img').src = qrUrl;
+                    document.getElementById('success-qr-download').href = qrUrl;
+
+                    document.getElementById('success-link-container').classList.remove('hidden');
+                    
+                    resetUploadForm();
+                } else {
+                    const now = new Date();
+                    await addDoc(collection(db, "documents"), {
+                        name: name,
+                        category: category,
+                        certType: certType,
+                        jenjang: jenjang,
+                        uploadStatus: uploadStatus,
+                        isArchived: false,
+                        isActive: true, // Default to active status
+                        url: urls[0], // fallback for backward compatibility
+                        urls: urls,
+                        type: 'image/jpeg',
+                        date: now.toLocaleDateString('id-ID'),
+                        time: now.toLocaleTimeString('id-ID'),
+                        year: now.getFullYear().toString(),
+                        timestamp: now.getTime()
+                    });
+                    
+                    progressEl.innerText = 'Dokumen berhasil disimpan!';
+                    
+                    const slug = getSlug(name);
+                    const directLink = `${window.location.origin}${''}#${category}/${slug}`;
+                    document.getElementById('success-direct-link').value = directLink;
+                    
+                    // Generate QR code for the direct link
+                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(directLink)}`;
+                    document.getElementById('success-qr-img').src = qrUrl;
+                    document.getElementById('success-qr-download').href = qrUrl;
+
+                    document.getElementById('success-link-container').classList.remove('hidden');
+
+                    nameInput.value = '';
+                    certTypeInput.value = '';
+                    jenjangInput.value = 'umum';
+                    uploadStatusInput.value = 'aktif';
+                    
+                    // Reset link fields to exactly one empty
+                    const container = document.getElementById('imgbb-links-container');
+                    container.innerHTML = '';
+                    addImgRow('');
+                    updateRowLabels();
+                }
+                
+                setTimeout(() => progressEl.innerText = '', 5000);
+            } catch (error) {
+                console.error(error);
+                progressEl.innerText = 'Gagal memproses dokumen. Silakan coba lagi.';
+                progressEl.classList.remove('text-indigo-600');
+                progressEl.classList.add('text-red-500');
+            }
+        });
+
+        // Real-Time Listener Setup (Fulfills exact real-time requirement)
+        let isInitialLoad = true;
+        const q = query(collection(db, "documents"), orderBy("timestamp", "desc"));
+
+        // No-op for fetchDocs since onSnapshot handles data sync seamlessly
+        async function fetchDocs() {
+            // Managed in real-time by onSnapshot
+        }
+
+        async function forceReloadDocs() {
+            handleRoute();
+        }
+
+        // Real-time listener subscription
+        onSnapshot(q, (snapshot) => {
+            const previousCount = allDocs.length;
+            const previousDocs = [...allDocs];
+            allDocs = [];
+            
+            snapshot.forEach((doc) => {
+                allDocs.push({ id: doc.id, ...doc.data() });
+            });
+
+            // Detect newly added documents in real-time (skip on initial load)
+            if (!isInitialLoad && allDocs.length > previousCount) {
+                const newDoc = allDocs.find(d => !previousDocs.some(pd => pd.id === d.id));
+                if (newDoc) {
+                    window.showRealtimeNotification(newDoc);
+                }
+            }
+            isInitialLoad = false;
+
+            // Instantly re-render the active view with fresh data
+            handleRoute();
+        }, (error) => {
+            console.error("Real-time sync error: ", error);
+        });
+
+        // Admin category filter tabs switcher (New Feature)
+        window.setAdminTab = function(tab) {
+            currentAdminTab = tab;
+            const tabs = ['all', 'sertifikat', 'piagam', 'pengumuman'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`admin-tab-${t}`);
+                if (t === tab) {
+                    btn.className = "px-4 py-2 rounded-full text-xs md:text-sm font-bold bg-indigo-600 text-white shadow-md transition-all duration-300 flex items-center gap-1.5";
+                } else {
+                    btn.className = "px-4 py-2 rounded-full text-xs md:text-sm font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all duration-300 flex items-center gap-1.5";
+                }
+            });
+            loadAdminDocuments();
+        };
+
+        // Attach dashboard search listener
+        document.getElementById('search-admin-docs').addEventListener('input', () => {
+            loadAdminDocuments();
+        });
+
+        function renderDocs(docs, containerId, isAdmin = false) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = '';
+            
+            if (docs.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 col-span-full text-center py-12 text-lg font-medium">Tidak ada dokumen ditemukan.</p>';
+                return;
+            }
+
+            docs.forEach((doc, index) => {
+                const delayClass = `stagger-${(index % 3) + 1}`;
+                const div = document.createElement('div');
+                div.className = `bg-white p-5 md:p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col transform hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 animate-fade-in ${delayClass}`;
+                
+                const isArchivedStatus = !!doc.isArchived;
+                const archiveBtnText = isArchivedStatus ? 'Aktifkan' : 'Arsipkan';
+                const archiveBtnClass = isArchivedStatus 
+                    ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-500 hover:text-white' 
+                    : 'bg-amber-50 text-amber-600 border border-amber-200 hover:bg-amber-500 hover:text-white';
+
+                const slug = getSlug(doc.name);
+
+                // Quick toggle status button and badge definitions (New Feature)
+                const isActiveStatus = doc.isActive !== false;
+                const activeBadge = isActiveStatus 
+                    ? `<span class="inline-block px-2 py-1 bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold rounded-md mb-2 uppercase ml-1"><i class="fa-solid fa-circle-check mr-1"></i> Aktif</span>`
+                    : `<span class="inline-block px-2 py-1 bg-rose-100 text-rose-800 border border-rose-200 text-xs font-bold rounded-md mb-2 uppercase ml-1"><i class="fa-solid fa-circle-xmark mr-1"></i> Nonaktif</span>`;
+                
+                const toggleActiveBtnClass = isActiveStatus
+                    ? 'bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-500 hover:text-white'
+                    : 'bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-500 hover:text-white';
+                const toggleActiveBtnText = isActiveStatus ? 'Nonaktifkan' : 'Aktifkan';
+
+                const adminActions = isAdmin ? `
+                    <div class="grid grid-cols-2 gap-1.5 mt-2">
+                        <button onclick="copyDocLink('${doc.category || 'sertifikat'}', '${slug}')" class="text-center bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition-all duration-300 shadow-sm border border-indigo-100">
+                            <i class="fa-solid fa-link text-[10px]"></i> Salin Link
+                        </button>
+                        <button onclick="showQrModal('${doc.category || 'sertifikat'}', '${slug}', '${doc.name}')" class="text-center bg-amber-50 hover:bg-amber-100 text-amber-700 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition-all duration-300 shadow-sm border border-amber-100">
+                            <i class="fa-solid fa-qrcode text-[10px]"></i> QR Code
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-4 gap-1 mt-2">
+                        <button onclick="toggleActiveStatus('${doc.id}', ${isActiveStatus})" class="block text-center py-2 rounded-xl text-[10px] font-bold transition-all duration-300 shadow-sm ${toggleActiveBtnClass}">${toggleActiveBtnText}</button>
+                        <button onclick="toggleArchiveDocument('${doc.id}', ${isArchivedStatus})" class="block text-center py-2 rounded-xl text-[10px] font-bold transition-all duration-300 shadow-sm ${archiveBtnClass}">${archiveBtnText}</button>
+                        <button onclick="editDocument('${doc.id}')" class="block text-center bg-blue-50 text-blue-600 border border-blue-200 py-2 rounded-xl text-[10px] font-bold hover:bg-blue-500 hover:text-white transition-all duration-300 shadow-sm">Edit</button>
+                        <button onclick="deleteDocument('${doc.id}')" class="block text-center bg-red-50 text-red-600 border border-red-200 py-2 rounded-xl text-[10px] font-bold hover:bg-red-500 hover:text-white transition-all duration-300 shadow-sm">Hapus</button>
+                    </div>
+                ` : '';
+
+                let badgeColor = 'bg-indigo-100 text-indigo-800';
+                let badgeText = doc.category || 'Sertifikat';
+                
+                if (doc.category === 'sertifikat' || !doc.category) {
+                    badgeText = 'Sertifikat';
+                    if (doc.certType) {
+                        badgeText = `Sertifikat ${doc.certType.charAt(0).toUpperCase() + doc.certType.slice(1)}`;
+                        if (doc.certType === 'emas') {
+                            badgeColor = 'bg-yellow-100 text-yellow-800 border border-yellow-300';
+                        } else if (doc.certType === 'perak') {
+                            badgeColor = 'bg-gray-200 text-gray-800 border border-gray-400';
+                        } else if (doc.certType === 'perunggu') {
+                            badgeColor = 'bg-orange-100 text-orange-800 border border-orange-300';
+                        }
+                    }
+                } else if (doc.category === 'piagam') {
+                    badgeText = 'Piagam';
+                    badgeColor = 'bg-teal-100 text-teal-800 border border-teal-300';
+                } else if (doc.category === 'pengumuman') {
+                    badgeText = 'Pengumuman';
+                    badgeColor = 'bg-indigo-100 text-indigo-800 border border-indigo-300';
+                }
+
+                // Page Count Badge
+                const docUrls = doc.urls || [doc.url];
+                const pageCountBadge = docUrls.length > 1 
+                    ? `<span class="inline-block px-2 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-bold rounded-md mb-2 uppercase ml-1"><i class="fa-solid fa-images mr-1"></i> ${docUrls.length} Lembar</span>`
+                    : '';
+
+                let jenjangBadge = '';
+                if (doc.category === 'pengumuman' && doc.jenjang) {
+                    let jenjangText = 'Umum';
+                    let jenjangColor = 'bg-blue-100 text-blue-800 border border-blue-200';
+                    if (doc.jenjang === 'sma-smk') {
+                        jenjangText = 'SMA / SMK';
+                        jenjangColor = 'bg-purple-100 text-purple-800 border border-purple-200';
+                    } else if (doc.jenjang === 'smp-mts') {
+                        jenjangText = 'SMP / MTs';
+                        jenjangColor = 'bg-sky-100 text-sky-800 border border-sky-200';
+                    } else if (doc.jenjang === 'sd-mi') {
+                        jenjangText = 'SD / MI';
+                        jenjangColor = 'bg-amber-100 text-amber-800 border border-amber-200';
+                    }
+                    jenjangBadge = `<span class="inline-block px-2 py-1 ${jenjangColor} text-xs font-bold rounded-md mb-2 uppercase ml-1">${jenjangText}</span>`;
+                }
+
+                let uploadStatusBadge = '';
+                if (doc.category === 'pengumuman') {
+                    const isUploadActive = (doc.uploadStatus !== 'nonaktif');
+                    const uploadStatusText = isUploadActive ? 'Upload: Permisi' : 'Upload: Nonaktif';
+                    const uploadStatusColor = isUploadActive ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-red-100 text-red-800 border border-red-200';
+                    uploadStatusBadge = `<span class="inline-block px-2 py-1 ${uploadStatusColor} text-xs font-bold rounded-md mb-2 uppercase ml-1">${uploadStatusText}</span>`;
+                }
+
+                let archiveBadge = '';
+                if (doc.isArchived) {
+                    archiveBadge = `<span class="inline-block px-2 py-1 bg-red-100 text-red-800 border border-red-200 text-xs font-bold rounded-md mb-2 uppercase ml-1">Diarsipkan</span>`;
+                }
+
+                div.innerHTML = `
+                    <div class="flex items-center justify-center h-40 md:h-48 bg-gray-100 rounded-xl mb-4 md:mb-5 overflow-hidden border border-gray-200 group relative cursor-pointer" onclick="openModalById('${doc.id}', '${slug}')">
+                        <img src="${doc.url}" alt="${doc.name}" class="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://via.placeholder.com/400x300?text=Gambar+Tidak+Ditemukan'">
+                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+                            <span class="text-white opacity-0 group-hover:opacity-100 font-semibold drop-shadow-md text-sm md:text-base">Klik untuk memperbesar</span>
+                        </div>
+                        ${docUrls.length > 1 ? `
+                        <div class="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2.5 py-1 rounded-md font-bold flex items-center gap-1 border border-white/10 shadow-md">
+                            <i class="fa-solid fa-copy"></i> ${docUrls.length} Halaman
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex flex-wrap gap-1">
+                            <span class="inline-block px-2 py-1 ${badgeColor} text-xs font-bold rounded-md mb-2 uppercase">${badgeText}</span>
+                            ${pageCountBadge}
+                            ${jenjangBadge}
+                            ${archiveBadge}
+                            ${activeBadge}
+                            ${uploadStatusBadge}
+                        </div>
+                        <h3 class="text-base md:text-lg font-bold text-gray-800 break-all line-clamp-2" title="${doc.name}">${doc.name}</h3>
+                        <div class="mt-3 md:mt-4 space-y-1 md:space-y-2 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                            <p class="text-xs md:text-sm text-gray-600 flex justify-between"><span class="font-semibold text-gray-700">Tanggal:</span> <span>${doc.date}</span></p>
+                            <p class="text-xs md:text-sm text-gray-600 flex justify-between"><span class="font-semibold text-gray-700">Tahun:</span> <span>${doc.year || '-'}</span></p>
+                            <p class="text-xs md:text-sm text-gray-600 flex justify-between"><span class="font-semibold text-gray-700">Waktu:</span> <span>${doc.time}</span></p>
+                        </div>
+                    </div>
+                    <button onclick="openModalById('${doc.id}', '${slug}')" class="mt-4 md:mt-6 block w-full text-center bg-indigo-50 text-indigo-700 border border-indigo-200 py-2.5 md:py-3 rounded-xl text-sm md:text-base font-bold hover:bg-indigo-600 hover:text-white transform hover:scale-105 transition-all duration-300 shadow-sm hover:shadow-md">Lihat Dokumen</button>
+                    ${adminActions}
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        async function loadPublicDocuments(category) {
+            if (category === 'sertifikat') {
+                filterSertifikat();
+            } else if (category === 'piagam') {
+                filterPiagam();
+            } else if (category === 'pengumuman') {
+                filterPengumuman();
+            }
+        }
+
+        async function loadAdminDocuments() {
+            // Count total documents for categories dynamically (New Feature)
+            const countAll = allDocs.length;
+            const countSertifikat = allDocs.filter(d => d.category === 'sertifikat' || !d.category).length;
+            const countPiagam = allDocs.filter(d => d.category === 'piagam').length;
+            const countPengumuman = allDocs.filter(d => d.category === 'pengumuman').length;
+
+            document.getElementById('count-all').innerText = countAll;
+            document.getElementById('count-sertifikat').innerText = countSertifikat;
+            document.getElementById('count-piagam').innerText = countPiagam;
+            document.getElementById('count-pengumuman').innerText = countPengumuman;
+
+            // Filter by active tab (New Feature)
+            let filtered = allDocs;
+            if (currentAdminTab !== 'all') {
+                filtered = allDocs.filter(d => {
+                    if (currentAdminTab === 'sertifikat') return d.category === 'sertifikat' || !d.category;
+                    return d.category === currentAdminTab;
+                });
+            }
+
+            // Also filter by admin dashboard search bar
+            const searchTerm = document.getElementById('search-admin-docs').value.toLowerCase();
+            if (searchTerm) {
+                filtered = filtered.filter(d => d.name.toLowerCase().includes(searchTerm));
+            }
+
+            renderDocs(filtered, 'admin-docs-container', true);
+        }
+
+        // Search and Filter logic for Sertifikat (Respects isActive)
+        function filterSertifikat() {
+            const term = document.getElementById('search-sertifikat').value.toLowerCase();
+            const type = document.getElementById('filter-cert-type').value;
+            const status = document.getElementById('filter-cert-status').value;
+            
+            const filtered = allDocs.filter(d => {
+                const isCert = (d.category === 'sertifikat' || !d.category);
+                const matchName = d.name.toLowerCase().includes(term);
+                const matchType = type === '' || d.certType === type;
+                const matchStatus = status === 'arsip' ? !!d.isArchived : !d.isArchived;
+                const matchActive = d.isActive !== false; // Hide if status is nonaktif
+                return isCert && matchName && matchType && matchStatus && matchActive;
+            });
+            renderDocs(filtered, 'sertifikat-container');
+        }
+
+        // Search and Filter logic for Piagam (Respects isActive)
+        function filterPiagam() {
+            const term = document.getElementById('search-piagam').value.toLowerCase();
+            const status = document.getElementById('filter-piagam-status').value;
+            
+            const filtered = allDocs.filter(d => {
+                const isPiagam = d.category === 'piagam';
+                const matchName = d.name.toLowerCase().includes(term);
+                const matchStatus = status === 'arsip' ? !!d.isArchived : !d.isArchived;
+                const matchActive = d.isActive !== false; // Hide if status is nonaktif
+                return isPiagam && matchName && matchStatus && matchActive;
+            });
+            renderDocs(filtered, 'piagam-container');
+        }
+
+        // Search and Filter logic for Pengumuman (Respects isActive)
+        function filterPengumuman() {
+            const term = document.getElementById('search-pengumuman').value.toLowerCase();
+            const jenjang = document.getElementById('filter-pengumuman-jenjang').value;
+            const status = document.getElementById('filter-pengumuman-status').value;
+            
+            const filtered = allDocs.filter(d => {
+                const isPengumuman = d.category === 'pengumuman';
+                const matchName = d.name.toLowerCase().includes(term);
+                const matchJenjang = jenjang === '' || d.jenjang === jenjang;
+                const matchStatus = status === 'arsip' ? !!d.isArchived : !d.isArchived;
+                const matchActive = d.isActive !== false; // Hide if status is nonaktif
+                const isUploadActive = (d.uploadStatus !== 'nonaktif');
+                
+                return isPengumuman && matchName && matchJenjang && matchStatus && isUploadActive && matchActive;
+            });
+            renderDocs(filtered, 'pengumuman-container');
+        }
+
+        // Attach listeners
+        document.getElementById('search-sertifikat').addEventListener('input', filterSertifikat);
+        document.getElementById('filter-cert-type').addEventListener('change', filterSertifikat);
+        document.getElementById('filter-cert-status').addEventListener('change', filterSertifikat);
+
+        document.getElementById('search-piagam').addEventListener('input', filterPiagam);
+        document.getElementById('filter-piagam-status').addEventListener('change', filterPiagam);
+
+        document.getElementById('search-pengumuman').addEventListener('input', filterPengumuman);
+        document.getElementById('filter-pengumuman-jenjang').addEventListener('change', filterPengumuman);
+        document.getElementById('filter-pengumuman-status').addEventListener('change', filterPengumuman);
+
+        // Pre-populate one image URL row on load
+        addImgRow('');
+
+        // Init
+        if(!window.location.hash) window.location.hash = '#sertifikat';
+        handleRoute();
+    </script>
+
+    <!-- InstanWeb AI Resiliency Fallback Script (Anti-Blank-Screen) -->
+    <script id="instanweb-resiliency-fallback">
+    (function() {
+        window.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                if (!window.db) {
+                    console.warn("⚠️ Firebase load failed, blocked, or slow. Instantiating highly resilient LocalStorage mock engine...");
+                    setupMockFirebase();
+                    
+                    if (typeof handleRoute === 'function') {
+                        console.log("Re-executing routes in offline sandbox...");
+                        handleRoute();
+                    }
+                }
+            }, 180);
+        });
+
+        function setupMockFirebase() {
+            function getLocalData(colName) {
+                const key = "mock_db_" + colName;
+                const data = localStorage.getItem(key);
+                if (!data) {
+                    let initial = [];
+                    if (colName === 'settings') {
+                        initial = [{ id: 'global', showScore: true, paymentActive: true }];
+                    } else if (colName === 'documents') {
+                        // Seed mock data
+                        initial = [
+                            {
+                                id: 'doc_1',
+                                name: 'Sertifikat Prestasi ManzCode',
+                                category: 'sertifikat',
+                                certType: 'emas',
+                                jenjang: 'umum',
+                                uploadStatus: 'aktif',
+                                isArchived: false,
+                                isActive: true,
+                                url: 'https://i.ibb.co.com/8DZVQkBv/sertifikat-manzcodecbt.png',
+                                urls: ['https://i.ibb.co.com/8DZVQkBv/sertifikat-manzcodecbt.png'],
+                                type: 'image/jpeg',
+                                date: '25/05/2026',
+                                time: '09:30',
+                                year: '2026',
+                                timestamp: Date.now()
+                            }
+                        ];
+                    }
+                    localStorage.setItem(key, JSON.stringify(initial));
+                    return initial;
+                }
+                return JSON.parse(data);
+            }
+
+            function setLocalData(colName, list) {
+                localStorage.setItem("mock_db_" + colName, JSON.stringify(list));
+                triggerListeners(colName);
+            }
+
+            const listeners = {};
+            function triggerListeners(colName) {
+                if (listeners[colName]) {
+                    listeners[colName].forEach(function(cb) { cb(); });
+                }
+            }
+
+            window.db = { isMock: true };
+            window.collection = function(db, colName) { return { type: 'collection', name: colName }; };
+            window.doc = function(db, colName, docId) { return { type: 'doc', col: colName, id: docId }; };
+            window.query = function(col, constraints) { return { type: 'query', col: col.name, constraints: Array.prototype.slice.call(arguments, 1) }; };
+            window.where = function(field, op, val) { return { type: 'where', field: field, op: op, val: val }; };
+
+            window.addDoc = async function(colRef, data) {
+                const colName = colRef.name;
+                const list = getLocalData(colName);
+                const newId = colName + "_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5);
+                const enriched = Object.assign({ id: newId, timestamp: Date.now() }, data);
+                list.push(enriched);
+                setLocalData(colName, list);
+                return { id: newId };
+            };
+
+            window.setDoc = async function(docRef, data) {
+                const colName = docRef.col;
+                const docId = docRef.id;
+                const list = getLocalData(colName);
+                const idx = list.findIndex(function(item) { return item.id === docId; });
+                if (idx !== -1) {
+                    list[idx] = Object.assign({ id: docId }, data);
+                } else {
+                    list.push(Object.assign({ id: docId }, data));
+                }
+                setLocalData(colName, list);
+            };
+
+            window.updateDoc = async function(docRef, data) {
+                const colName = docRef.col;
+                const docId = docRef.id;
+                const list = getLocalData(colName);
+                const idx = list.findIndex(function(item) { return item.id === docId; });
+                if (idx !== -1) {
+                    list[idx] = Object.assign({}, list[idx], data);
+                    setLocalData(colName, list);
+                }
+            };
+
+            window.deleteDoc = async function(docRef) {
+                const colName = docRef.col;
+                const docId = docRef.id;
+                const list = getLocalData(colName);
+                const filtered = list.filter(function(item) { return item.id !== docId; });
+                setLocalData(colName, filtered);
+            };
+
+            window.getDoc = async function(docRef) {
+                const colName = docRef.col;
+                const docId = docRef.id;
+                const list = getLocalData(colName);
+                const found = list.find(function(item) { return item.id === docId; });
+                return {
+                    exists: function() { return found !== undefined; },
+                    data: function() { return found; }
+                };
+            };
+
+            window.getDocs = async function(queryOrCol) {
+                const colName = queryOrCol.type === 'query' ? queryOrCol.col : queryOrCol.name;
+                let list = getLocalData(colName);
+
+                if (queryOrCol.type === 'query' && queryOrCol.constraints) {
+                    queryOrCol.constraints.forEach(function(con) {
+                        if (con && con.type === 'where') {
+                            list = list.filter(function(item) {
+                                const val = item[con.field];
+                                if (con.op === '==') return val === con.val;
+                                return true;
+                            });
+                        }
+                    });
+                }
+
+                list.sort((a,b) => b.timestamp - a.timestamp);
+
+                return {
+                    empty: list.length === 0,
+                    forEach: function(cb) {
+                        list.forEach(function(item) {
+                            cb({
+                                id: item.id,
+                                data: function() { return item; }
+                            });
+                        });
+                    }
+                };
+            };
+
+            window.onSnapshot = function(ref, callback) {
+                const colName = ref.col || ref.name;
+                if (!listeners[colName]) {
+                    listeners[colName] = [];
+                }
+
+                const listenerWrapper = async function() {
+                    if (ref.id) {
+                        const list = getLocalData(colName);
+                        const found = list.find(function(item) { return item.id === ref.id; });
+                        callback({
+                            exists: function() { return found !== undefined; },
+                            data: function() { return found; }
+                        });
+                    } else {
+                        const snapshot = await window.getDocs(ref);
+                        callback(snapshot);
+                    }
+                };
+
+                listeners[colName].push(listenerWrapper);
+                listenerWrapper();
+
+                return function() {
+                    listeners[colName] = listeners[colName].filter(function(cb) { return cb !== listenerWrapper; });
+                };
+            };
+        }
+    })();
+    </script>
+    </body>
+</html>
