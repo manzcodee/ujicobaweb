@@ -26,6 +26,8 @@
     })();
     </script>
       
+    
+      
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="google-site-verification" content="GvyTGbIx3Zov0CXr0f1voJ2LJnac-ppCl62NStzdY3E" />
@@ -165,9 +167,6 @@
                         Masuk / Pendaftaran
                     </button>
                 </form>
-                <div class="mt-4">
-                    <a href="#admin-login" class="text-xs text-gray-400 hover:text-indigo-600 transition"><i class="fas fa-lock mr-1"></i> Login Admin</a>
-                </div>
             </div>
         </section>
 
@@ -1584,7 +1583,10 @@ Jawaban: B</pre>
 
             // Listen to Testimonials
             onSnapshot(collection(db, "testimonials"), (snapshot) => {
-                window.renderTestimonialLists(snapshot);
+                window.lastTestimonialSnapshot = snapshot;
+                if (typeof window.renderTestimonialLists === 'function') {
+                    window.renderTestimonialLists(snapshot);
+                }
             });
 
             // Listen to Payment Methods
@@ -1595,13 +1597,16 @@ Jawaban: B</pre>
                     window.allPaymentMethods.push({ id: docSnap.id, ...docSnap.data() });
                 });
                 window.allPaymentMethods.sort((a,b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
-                window.renderStudentPaymentMethods();
-                window.renderAdminPaymentMethods();
+                if (typeof window.renderStudentPaymentMethods === 'function') window.renderStudentPaymentMethods();
+                if (typeof window.renderAdminPaymentMethods === 'function') window.renderAdminPaymentMethods();
             });
 
             // Listen to Payment Proof Images
             onSnapshot(collection(db, "payment_images"), (snapshot) => {
-                window.renderPaymentImages(snapshot);
+                window.lastPaymentImagesSnapshot = snapshot;
+                if (typeof window.renderPaymentImages === 'function') {
+                    window.renderPaymentImages(snapshot);
+                }
             });
 
             // Listen to Packages
@@ -1612,8 +1617,8 @@ Jawaban: B</pre>
                     window.allPackages.push({ id: docSnap.id, ...docSnap.data() });
                 });
                 window.allPackages.sort((a,b) => (a.price || 0) - (b.price || 0));
-                window.renderStudentPackages();
-                window.renderAdminPackages();
+                if (typeof window.renderStudentPackages === 'function') window.renderStudentPackages();
+                if (typeof window.renderAdminPackages === 'function') window.renderAdminPackages();
             });
 
             // Listen to Broadcast Messages
@@ -1624,8 +1629,8 @@ Jawaban: B</pre>
                     window.allBroadcasts.push({ id: docSnap.id, ...docSnap.data() });
                 });
                 window.allBroadcasts.sort((a,b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
-                window.renderAdminBroadcasts();
-                window.renderStudentBroadcasts();
+                if (typeof window.renderAdminBroadcasts === 'function') window.renderAdminBroadcasts();
+                if (typeof window.renderStudentBroadcasts === 'function') window.renderStudentBroadcasts();
             });
 
             // Listen to Registration Links
@@ -1636,7 +1641,7 @@ Jawaban: B</pre>
                     window.allRegistrationLinks.push({ id: docSnap.id, ...docSnap.data() });
                 });
                 window.allRegistrationLinks.sort((a,b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
-                window.renderAdminRegLinks();
+                if (typeof window.renderAdminRegLinks === 'function') window.renderAdminRegLinks();
                 if (window.triggerAvailableLinksUpdate) window.triggerAvailableLinksUpdate();
             });
         }
@@ -1673,6 +1678,29 @@ Jawaban: B</pre>
             setupFormListeners();
             setupAntiCheatListener();
             loadLocalRegistrations();
+
+            // Trigger initial renders if data was already loaded by Firebase module (resolving timing bugs)
+            if (window.lastTestimonialSnapshot && typeof window.renderTestimonialLists === 'function') {
+                window.renderTestimonialLists(window.lastTestimonialSnapshot);
+            }
+            if (window.allPaymentMethods && window.allPaymentMethods.length > 0) {
+                if (typeof window.renderStudentPaymentMethods === 'function') window.renderStudentPaymentMethods();
+                if (typeof window.renderAdminPaymentMethods === 'function') window.renderAdminPaymentMethods();
+            }
+            if (window.lastPaymentImagesSnapshot && typeof window.renderPaymentImages === 'function') {
+                window.renderPaymentImages(window.lastPaymentImagesSnapshot);
+            }
+            if (window.allPackages && window.allPackages.length > 0) {
+                if (typeof window.renderStudentPackages === 'function') window.renderStudentPackages();
+                if (typeof window.renderAdminPackages === 'function') window.renderAdminPackages();
+            }
+            if (window.allBroadcasts && window.allBroadcasts.length > 0) {
+                if (typeof window.renderAdminBroadcasts === 'function') window.renderAdminBroadcasts();
+                if (typeof window.renderStudentBroadcasts === 'function') window.renderStudentBroadcasts();
+            }
+            if (window.allRegistrationLinks && window.allRegistrationLinks.length > 0) {
+                if (typeof window.renderAdminRegLinks === 'function') window.renderAdminRegLinks();
+            }
         });
 
         // Setup Routing Mechanisms
@@ -1732,7 +1760,7 @@ Jawaban: B</pre>
                     window.currentRegSubject = queryParams.subject;
                     window.currentRegLinkId = queryParams.id;
                 }
-            } else if (cleanHash === '#admin-login') {
+            } else if (cleanHash === '#admin') {
                 document.getElementById('admin-login-section').classList.add('active');
             } else if (cleanHash === '#dashboard') {
                 if (!sName) { window.location.hash = '#home'; return; }
@@ -1772,7 +1800,7 @@ Jawaban: B</pre>
             } else if (cleanHash === '#testimonials') {
                 document.getElementById('testimonial-section').classList.add('active');
             } else if (cleanHash === '#admin-dashboard') {
-                if (!isAdmin) { window.location.hash = '#admin-login'; return; }
+                if (!isAdmin) { window.location.hash = '#admin'; return; }
                 document.getElementById('admin-section').classList.add('active');
                 
                 const tab = queryParams.tab || 'tab-exams';
@@ -3272,6 +3300,8 @@ Jawaban: B</pre>
         };
     </script>
 
+    
+    
     <!-- InstanWeb AI Resiliency Fallback Script (Anti-Blank-Screen) -->
     <script id="instanweb-resiliency-fallback">
     (function() {
