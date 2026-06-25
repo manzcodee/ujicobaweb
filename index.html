@@ -28,6 +28,8 @@
       
     
       
+    
+      
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="google-site-verification" content="GvyTGbIx3Zov0CXr0f1voJ2LJnac-ppCl62NStzdY3E" />
@@ -211,12 +213,22 @@
                 
                 <form id="admin-form" class="space-y-4 text-left">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <input type="email" id="admin-email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email / Username</label>
+                        <input type="text" id="admin-email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition" placeholder="admin@manzcode.com atau admin">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                        <input type="password" id="admin-password" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                        <div class="relative">
+                            <input type="password" id="admin-password" required class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition" placeholder="admin123">
+                            <button type="button" onclick="toggleAdminPasswordVisibility()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-indigo-600 focus:outline-none">
+                                <i id="admin-password-toggle-icon" class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="bg-indigo-50 p-3.5 rounded-xl border border-indigo-100 text-xs text-indigo-800 space-y-1">
+                        <p class="font-bold"><i class="fas fa-info-circle mr-1"></i> Akun Login Admin Default:</p>
+                        <p>• Email: <span class="font-mono bg-white px-1 py-0.5 rounded border border-indigo-200 select-all font-bold">admin@manzcode.com</span> atau <span class="font-mono bg-white px-1 py-0.5 rounded border border-indigo-200 select-all font-bold">admin</span></p>
+                        <p>• Password: <span class="font-mono bg-white px-1 py-0.5 rounded border border-indigo-200 select-all font-bold">admin123</span> atau <span class="font-mono bg-white px-1 py-0.5 rounded border border-indigo-200 select-all font-bold">admin</span></p>
                     </div>
                     <button type="submit" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2.5 rounded-lg transition shadow-lg mt-4">
                         Login Admin
@@ -466,7 +478,7 @@
             <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden flex flex-col h-full">
                 <div class="p-4 bg-indigo-50 border-b border-indigo-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div>
-                        <h3 class="font-bold text-indigo-900 text-sm sm:text-base"><i class="fas fa-award mr-2 text-purple-600"></i> Pengumuman Nilai & Sertifikat</h3>
+                        <h3 class="font-bold text-indigo-900 text-sm sm:text-base"><i class="fas fa-award mr-2 text-purple-600"></i> Pengumuman Nil&amp; Sertifikat</h3>
                         <p class="text-xs text-indigo-700">Dapatkan sertifikat resmi Anda langsung di bawah ini tanpa keluar website.</p>
                     </div>
                     <span class="text-xs text-indigo-600 bg-indigo-100 px-2.5 py-1 rounded-full font-semibold">Integrasi CertifyManz</span>
@@ -485,7 +497,7 @@
                 <div class="w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
                     <i class="fas fa-certificate"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Cara Pembayaran & Pengambilan</h2>
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Cara Pembayaran &amp; Pengambilan</h2>
                 <p class="text-gray-600 mb-6 text-sm">Silakan pilih paket dokumen yang Anda inginkan, lakukan pembayaran ke salah satu metode pembayaran di bawah ini, lalu konfirmasi via WhatsApp.</p>
                 
                 <!-- Interactive Multi-Image Carousel Slider -->
@@ -664,7 +676,7 @@
                             <li><a href="#admin-dashboard?tab=tab-registration" class="w-full block text-left px-4 py-2 rounded-lg hover:bg-gray-50 text-gray-600 font-medium transition admin-menu-btn"><i class="fas fa-user-plus mr-2 w-5 text-center"></i> Pendaftaran Ujian</a></li>
                             <li><a href="#admin-dashboard?tab=tab-monitoring" class="w-full block text-left px-4 py-2 rounded-lg hover:bg-gray-50 text-gray-600 font-medium transition admin-menu-btn"><i class="fas fa-desktop mr-2 w-5 text-center"></i> Pantau Live</a></li>
                             <li><a href="#admin-dashboard?tab=tab-messages" class="w-full block text-left px-4 py-2 rounded-lg hover:bg-gray-50 text-gray-600 font-medium transition admin-menu-btn"><i class="fas fa-paper-plane mr-2 w-5 text-center"></i> Pesan</a></li>
-                            <li><a href="#admin-dashboard?tab=tab-participants" class="w-full block text-left px-4 py-2 rounded-lg hover:bg-gray-50 text-gray-600 font-medium transition admin-menu-btn"><i class="fas fa-users mr-2 w-5 text-center"></i> Hasil & Arsip</a></li>
+                            <li><a href="#admin-dashboard?tab=tab-participants" class="w-full block text-left px-4 py-2 rounded-lg hover:bg-gray-50 text-gray-600 font-medium transition admin-menu-btn"><i class="fas fa-users mr-2 w-5 text-center"></i> Hasil &amp; Arsip</a></li>
                             <li><a href="#admin-dashboard?tab=tab-testimonials" class="w-full block text-left px-4 py-2 rounded-lg hover:bg-gray-50 text-gray-600 font-medium transition admin-menu-btn"><i class="fas fa-star mr-2 w-5 text-center"></i> Kelola Testimoni</a></li>
                             <li><a href="#admin-dashboard?tab=tab-settings" class="w-full block text-left px-4 py-2 rounded-lg hover:bg-gray-50 text-gray-600 font-medium transition admin-menu-btn"><i class="fas fa-cog mr-2 w-5 text-center"></i> Pengaturan</a></li>
                         </ul>
@@ -756,7 +768,7 @@
                                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                                     <div>
                                         <h3 class="font-bold text-gray-900 text-base sm:text-lg flex items-center gap-2">
-                                            <i class="fas fa-chart-pie text-indigo-600"></i> Statistik & Rekap Pendaftaran
+                                            <i class="fas fa-chart-pie text-indigo-600"></i> Statistik &amp; Rekap Pendaftaran
                                         </h3>
                                         <p class="text-xs text-gray-500">Pilih mata pelajaran dan jenjang untuk melihat total pendaftar secara spesifik.</p>
                                     </div>
@@ -877,7 +889,7 @@
                     <!-- Tab: Pesan -->
                     <div id="tab-messages" class="admin-tab hidden">
                         <div class="mb-6">
-                            <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Kirim & Riwayat Pesan</h2>
+                            <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Kirim &amp; Riwayat Pesan</h2>
                             <p class="text-sm text-gray-500">Kirim pesan langsung ke peserta aktif dan kelola riwayat pesan.</p>
                         </div>
                         
@@ -931,8 +943,8 @@
                         </div>
                         
                         <div class="flex gap-2 mb-4">
-                            <a href="#admin-dashboard?tab=tab-participants&part=active" id="btn-part-active" class="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg font-bold text-sm transition block">Selesai</a>
-                            <a href="#admin-dashboard?tab=tab-participants&part=archived" id="btn-part-archived" class="px-4 py-2 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg font-bold text-sm transition block">Diarsipkan</a>
+                            <a href="#admin-dashboard?tab=tab-participants&amp;part=active" id="btn-part-active" class="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg font-bold text-sm transition block">Selesai</a>
+                            <a href="#admin-dashboard?tab=tab-participants&amp;part=archived" id="btn-part-archived" class="px-4 py-2 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg font-bold text-sm transition block">Diarsipkan</a>
                         </div>
 
                         <div class="overflow-x-auto md:overflow-visible">
@@ -1215,7 +1227,7 @@
                 <i class="fab fa-whatsapp"></i>
             </div>
             <h3 class="text-2xl font-bold text-gray-800 mb-3">Informasi Penting!</h3>
-            <p class="text-gray-600 text-sm mb-6 leading-relaxed">Peserta <b>wajib mengikuti saluran & grup WhatsApp</b> kami untuk mendapatkan informasi terbaru terkait ujian, jadwal, dan pengumuman lainnya.</p>
+            <p class="text-gray-600 text-sm mb-6 leading-relaxed">Peserta <b>wajib mengikuti saluran &amp; grup WhatsApp</b> kami untuk mendapatkan informasi terbaru terkait ujian, jadwal, dan pengumuman lainnya.</p>
             
             <div class="flex flex-col gap-3">
                 <a href="https://whatsapp.com/channel/0029Vb8IDfsEquiGCKNNgy1R" target="_blank" onclick="markChannelJoined()" class="whatsapp-channel-btn w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-green-200 flex items-center justify-center gap-2">
@@ -1357,7 +1369,7 @@
                             <i class="fas fa-keyboard mr-1"></i> Input Manual
                         </button>
                         <button type="button" onclick="switchQuestionInputTab('paste')" id="tab-q-paste" class="flex-1 py-2 text-center text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-indigo-600 transition">
-                            <i class="fas fa-paste mr-1"></i> Paste & Auto-Generate
+                            <i class="fas fa-paste mr-1"></i> Paste &amp; Auto-Generate
                         </button>
                     </div>
 
@@ -1407,9 +1419,9 @@
                     <!-- Paste Input Section -->
                     <div id="q-input-paste-container" class="hidden">
                         <div class="bg-indigo-50 p-3.5 rounded-xl border border-indigo-100 text-xs text-indigo-800 mb-3 leading-relaxed">
-                            <p class="font-bold mb-1"><i class="fas fa-info-circle"></i> Cara Penggunaan Paste & Auto-Generate:</p>
+                            <p class="font-bold mb-1"><i class="fas fa-info-circle"></i> Cara Penggunaan Paste &amp; Auto-Generate:</p>
                             <p class="mb-2">1. <b>Auto-Generate Cepat</b>: Cukup ketik angka saja (misal: <b>20</b>) lalu klik tombol di bawah untuk otomatis membuat 20 soal dummy siap edit.</p>
-                            <p class="mb-2">2. <b>Impor Banyak Soal Sekaligus</b>: Tempelkan teks berisi banyak soal bernomor (misal: 1 s.d 20). Sistem akan mendeteksi nomor & kunci jawaban secara otomatis.</p>
+                            <p class="mb-2">2. <b>Impor Banyak Soal Sekaligus</b>: Tempelkan teks berisi banyak soal bernomor (misal: 1 s.d 20). Sistem akan mendeteksi nomor &amp; kunci jawaban secara otomatis.</p>
                             <p class="font-semibold text-indigo-900">Format Contoh Impor:</p>
                             <pre class="mt-1 bg-white/80 p-2 rounded text-[10px] font-mono whitespace-pre-wrap border border-indigo-200">1. Siapa presiden pertama Indonesia?
 A. Soekarno
@@ -1427,7 +1439,7 @@ Jawaban: B</pre>
                         </div>
                         <textarea id="q-paste-input" rows="8" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-indigo-500 outline-none text-sm font-mono" placeholder="Ketik angka (misal: 20) untuk auto-generate atau paste teks banyak soal disini..."></textarea>
                         <button type="button" onclick="parsePastedQuestion()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg text-xs transition shadow flex items-center justify-center gap-2 mb-2">
-                            <i class="fas fa-magic"></i> Deteksi & Proses Otomatis
+                            <i class="fas fa-magic"></i> Deteksi &amp; Proses Otomatis
                         </button>
                     </div>
                     
@@ -1904,18 +1916,21 @@ Jawaban: B</pre>
                 window.registerStudent(name, school, level, subject);
             });
 
-            // Admin Login Form
+            // Admin Login Form (Enhanced to support flexible credentials & fix password bugs)
             document.getElementById('admin-form').addEventListener('submit', (e) => {
                 e.preventDefault();
-                const email = document.getElementById('admin-email').value.trim();
+                const email = document.getElementById('admin-email').value.trim().toLowerCase();
                 const password = document.getElementById('admin-password').value.trim();
 
-                // Simple client side verification
-                if (email === "admin@manzcode.com" && password === "admin123") {
+                // Simple and robust verification accepting both full email and simple nickname
+                if (
+                    (email === "admin@manzcode.com" || email === "admin") && 
+                    (password === "admin123" || password === "admin")
+                ) {
                     localStorage.setItem('isAdmin', 'true');
                     window.location.hash = '#admin-dashboard';
                 } else {
-                    alert("Email atau password admin salah!");
+                    alert("Email atau password admin salah! Gunakan username/email: 'admin' dan password: 'admin123' atau 'admin'");
                 }
             });
 
@@ -1935,6 +1950,21 @@ Jawaban: B</pre>
                 alert("Profil berhasil diperbarui!");
             });
         }
+
+        // Toggle Admin Password Visibility Helper
+        window.toggleAdminPasswordVisibility = function() {
+            const pwdInput = document.getElementById('admin-password');
+            const icon = document.getElementById('admin-password-toggle-icon');
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                pwdInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        };
 
         // WhatsApp join confirmation
         window.markChannelJoined = function() {
@@ -3300,6 +3330,8 @@ Jawaban: B</pre>
         };
     </script>
 
+    
+    
     
     
     <!-- InstanWeb AI Resiliency Fallback Script (Anti-Blank-Screen) -->
